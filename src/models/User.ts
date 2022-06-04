@@ -1,6 +1,6 @@
-import {Column, Entity, OneToMany, ManyToMany, PrimaryGeneratedColumn} from "typeorm";
-import {Group} from "./Group";
+import {Column, Entity, Generated, ManyToMany, OneToMany, PrimaryGeneratedColumn} from "typeorm";
 import {Availability} from "./Availability";
+import {Group} from "./Group";
 
 @Entity()
 export class User {
@@ -8,7 +8,14 @@ export class User {
   id!: number;
 
   @Column()
-  name!: string;
+  @Generated('uuid')
+  uuid!: string;
+
+  @Column()
+  firstname!: string;
+
+  @Column()
+  lastname!: string;
 
   @OneToMany(type => Availability, (availability:Availability) => availability.owner)
   availabilities!: Availability[];
