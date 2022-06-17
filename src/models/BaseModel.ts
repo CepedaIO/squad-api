@@ -3,7 +3,7 @@ import {Field, ObjectType} from "type-graphql";
 
 @ObjectType()
 @Entity()
-export class User {
+export class BaseModel {
   @Field()
   @PrimaryGeneratedColumn()
   id!: number;
@@ -14,10 +14,10 @@ export class User {
   uuid!: string;
 
   @Field()
-  @Column()
-  firstname!: string;
+  @Column("timestamp", { default: () => "CURRENT_TIMESTAMP" })
+  created!: Date;
 
   @Field()
-  @Column()
-  lastname!: string;
+  @Column("timestamp", { default: () => "CURRENT_TIMESTAMP", onUpdate: "CURRENT_TIMESTAMP"})
+  modified!: Date;
 }

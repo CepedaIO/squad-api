@@ -4,10 +4,7 @@
     "target": "ESNext",
     "moduleResolution": "node",
     "esModuleInterop": true,
-    "sourceMap": true,
-    "declaration": true,
     "outDir": "dist",
-    "baseUrl": "src",
     "strictNullChecks": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true

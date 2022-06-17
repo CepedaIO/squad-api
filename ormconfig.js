@@ -8,5 +8,6 @@ module.exports = {
   entities: [
     'src/models/**/**.{ts,js}',
   ],
-  synchronize: true
+  synchronize: true,
+  debug: true
 };
