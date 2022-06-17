@@ -3,6 +3,7 @@ import {Field, InputType, ObjectType} from "type-graphql";
 import {BaseModel} from "./BaseModel";
 import {IsEmail} from "class-validator";
 import {RoleModel} from "./RoleModel";
+import {SessionModel} from "./SessionModel";
 
 @InputType()
 export class AccountInput {
@@ -31,4 +32,7 @@ export class AccountModel extends BaseModel {
 
   @OneToMany(() => RoleModel, (role) => role.account)
   roles: RoleModel[];
+
+  @OneToMany(() => SessionModel, (session) =>session.account)
+  sessions: SessionModel[];
 }

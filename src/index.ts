@@ -9,6 +9,7 @@ import {AccountModel} from "./models/AccountModel";
 import {ResolverData} from "type-graphql/dist/interfaces/ResolverData";
 import {RoleModel} from "./models/RoleModel";
 import {AppContext, Roles} from "./types";
+import {SessionModel} from "./models/SessionModel";
 
 (async () => {
   await createConnection();
@@ -39,9 +40,10 @@ import {AppContext, Roles} from "./types";
           where: { email }
         });
 
-        if(!jwt.verify(token, account.secret)) {
-          throw new Error('Invalid JWT');
-        }
+        const sessionSecret = jwt.verify(token, account.secret);
+        await getRepository(SessionModel).findOneOrFail({
+          where: { secret: sessionSecret }
+        });
 
         ctx.account = account;
       }

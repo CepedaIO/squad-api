@@ -6,6 +6,8 @@ import { authenticator } from "otplib";
 import {SimpleResponse} from "../models/common";
 import jwt from "jsonwebtoken";
 import {appConfig} from "../configs/app";
+import * as crypto from "crypto";
+import {SessionModel} from "../models/SessionModel";
 
 @Resolver(AccountModel)
 export class AccountResolver {
@@ -41,7 +43,13 @@ export class AccountResolver {
       return { success: false, result: 'Failed to login' };
     }
 
-    const emailToken = jwt.sign(account.email, account.secret);
+    const sessionSecret = crypto.randomBytes(16).toString('hex');
+    await getRepository(SessionModel).insert({
+      secret: sessionSecret,
+      account
+    })
+
+    const emailToken = jwt.sign(sessionSecret, account.secret);
     const token = jwt.sign({
       email: account.email,
       token: emailToken
