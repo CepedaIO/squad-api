@@ -4,14 +4,9 @@ import {buildSchema} from "type-graphql";
 import {ApolloServer} from "apollo-server";
 import {UserResolver} from "./resolvers/User";
 import {createConnection} from "typeorm";
-import {User} from "./models/User";
 
 (async () => {
-  await createConnection({
-    type: 'postgres',
-    entities: [User],
-    synchronize: true
-  });
+  await createConnection();
   const schema = await buildSchema({
     resolvers: [UserResolver]
   });
