@@ -1,25 +1,23 @@
-import {Column, Entity, Generated, ManyToMany, OneToMany, PrimaryGeneratedColumn} from "typeorm";
-import {Availability} from "./Availability";
-import {Group} from "./Group";
+import {Column, Entity, Generated, PrimaryGeneratedColumn} from "typeorm";
+import {Field, ObjectType} from "type-graphql";
 
+@ObjectType()
 @Entity()
 export class User {
+  @Field()
   @PrimaryGeneratedColumn()
   id!: number;
 
+  @Field()
   @Column()
   @Generated('uuid')
   uuid!: string;
 
+  @Field()
   @Column()
   firstname!: string;
 
+  @Field()
   @Column()
   lastname!: string;
-
-  @OneToMany(type => Availability, (availability:Availability) => availability.owner)
-  availabilities!: Availability[];
-
-  @ManyToMany(type => Group, group => group.owner)
-  groups!: Group[];
 }
