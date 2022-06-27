@@ -1,68 +1,135 @@
 import {Arg, Authorized, Mutation, Query, Resolver} from "type-graphql";
-import {AccountModel, AccountInput, LoginInput} from "../models/AccountModel";
+import {Account, LoginInput} from "../models/Account";
 import {getRepository} from "typeorm";
-import QRCode from "qrcode";
-import { authenticator } from "otplib";
 import {SimpleResponse} from "../models/common";
-import jwt from "jsonwebtoken";
-import {appConfig} from "../configs/app";
-import * as crypto from "crypto";
-import {SessionModel} from "../models/SessionModel";
+import {transporter} from "../services/emailer";
+import {randomBytes} from "crypto";
+import {PendingSignup} from "../models/PendingSignup";
+import {LoginToken} from "../models/LoginToken";
+import { appConfig } from "../configs/app";
+import { join } from "path";
+import {Session} from "../models/Session";
 
-@Resolver(AccountModel)
+@Resolver(Account)
 export class AccountResolver {
-  @Query(() => [AccountModel])
+  @Query(() => [Account])
   @Authorized(['ADMIN'])
   async accounts() {
-    return getRepository(AccountModel).find({
+    return getRepository(Account).find({
       take: 10
     });
   }
-
+/*
   @Query(() => SimpleResponse)
   async getQRCode(
     @Arg("account") input: AccountInput
   ): Promise<SimpleResponse> {
-    const account = await getRepository(AccountModel).findOneOrFail({ where: input });
+    const account = await getRepository(Account).findOneOrFail({ where: input });
     const key = authenticator.keyuri(input.email, 'CepedaIO Event Matcher', account.secret);
     const url = await QRCode.toDataURL(key);
 
     return { success: true, result: url };
-  }
+  }*/
 
-  @Query(() => SimpleResponse)
+  @Mutation(() => SimpleResponse)
   async login(
     @Arg("auth") input: LoginInput
   ): Promise<SimpleResponse> {
-    const account = await getRepository(AccountModel).findOneOrFail({
-      where: { email: input.email }
+    const accountRepository = getRepository(Account);
+    let account = await accountRepository.findOne({
+      where: input
     });
-    const isAuthenticated = authenticator.check(input.code, account.secret);
 
+    const firstTime = !account;
+
+    if(firstTime) {
+      account = await accountRepository.save({
+        email: input.email
+      });
+
+      await getRepository(PendingSignup).save({ account })
+    }
+
+    const key = randomBytes(16).toString('hex');
+    const session = await getRepository(Session).save({
+      key,
+      account
+    });
+
+    const login = await getRepository(LoginToken).save({
+      token: randomBytes(16).toString('hex'),
+      account,
+      session
+    });
+
+    const result = (!account) ? 'Account creation email sent' : 'Login email was sent';
+    const loginLink = join(appConfig.origin, 'login', login.token, login.uuid);
+
+    await transporter.sendMail({
+      from: 'no-reply@cepeda.io',
+      to: input.email,
+      subject: 'Welcome to CepedaIO/Event-Matcher!',
+      html: `
+<html>
+  <body>
+    <h1>Thank you for joining!</h1>
+    
+    <p>
+      That's about it! If you have any questions or run into any bugs, reach out to <a style="color:#3b83f6;text-decoration:underline;cursor:pointer" href = "mailto:support@cepeda.io">support@cepeda.io</a>
+    </p>
+    <p>
+      How would you like to login?
+    </p>
+    <ul style="list-style: none">
+      <li style="margin-bottom:10px">
+        <a href="${loginLink}">
+          <button style="background-color:#3b83f6;color:white;width:165px;height:40px;cursor:pointer;border:0;">Expire after infinity</button>
+        </a>
+      </li>
+      <li style="margin-bottom:10px">
+        <a href="${loginLink}?expire=1">
+          <button style="background-color:#3b83f6;color:white;width:165px;height:40px;cursor:pointer;border:0;">Expire after 1 hour</button>
+        </a>
+      </li>
+      <li style="margin-bottom:10px">
+        <a href="${loginLink}?reject=true">
+          <button style="background-color:#fb7186;color:white;width:165px;height:40px;cursor:pointer;border:0;">Don't Login</button>
+        </a>
+       </li>
+    </ul>
+    <sub>
+      Note: Expire after infinity means that after an infinite amount of time has passed, you will be prompted to login again.
+      <br />
+      This is a good choice if you're using a personal computer
+    </sub>
+  </body>
+</html>
+    `});
+
+    return { success: true , result };
+/*
     if(!isAuthenticated) {
       return { success: false, result: 'Failed to login' };
     }
 
-    const sessionSecret = crypto.randomBytes(16).toString('hex');
-    await getRepository(SessionModel).insert({
-      secret: sessionSecret,
+    const sessionKey = crypto.randomBytes(16).toString('hex');
+    const session = await getRepository(Session).save({
+      key: sessionKey,
       account
-    })
+    });
 
-    const emailToken = jwt.sign(sessionSecret, account.secret);
-    const token = jwt.sign({
-      email: account.email,
-      token: emailToken
-    }, appConfig.jwtSecret);
-
-    return { success: true, result: token };
+    const result = await compress({
+      account: pick(account, 'uuid', 'email'),
+      session
+    }, account.secret);
+*/
   }
-
+/*
   @Mutation(() => SimpleResponse)
   async createAccount(
     @Arg("account") input: AccountInput,
   ): Promise<SimpleResponse> {
-    const accountRepo = getRepository(AccountModel);
+    const accountRepo = getRepository(Account);
     const account = await accountRepo.findOne({
       where: { email: input.email }
     });
@@ -72,11 +139,11 @@ export class AccountResolver {
     }
 
     const secret = authenticator.generateSecret();
-    await getRepository(AccountModel).insert({
+    await getRepository(Account).insert({
       ...input,
       secret
     });
 
     return { success: true, result: 'Account Created!' };
-  }
+  }*/
 }

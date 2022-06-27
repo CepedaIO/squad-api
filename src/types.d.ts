@@ -1,10 +1,10 @@
-import {AccountModel} from "./models/AccountModel";
+import {JWT} from "./services/jwt";
 
 export type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
 export type RequireBy<T, K extends keyof T> = Omit<T, K> & Required<Pick<T, K>>;
 
 export interface AppContext {
-  account?: AccountModel;
+  account?: JWT['account'];
 }
 
 export type Authenticated = RequireBy<AppContext, 'account'>;

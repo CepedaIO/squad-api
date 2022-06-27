@@ -1,10 +1,16 @@
-import {AuthChecker} from "type-graphql";
+import {ResolverData} from "type-graphql/dist/interfaces/ResolverData";
+import {AppContext, Roles} from "../types";
+import {Any, getRepository} from "typeorm";
+import {Role} from "../models/Role";
 
-export const customAuthChecker: AuthChecker<Context> = (
-  { root, args, context, info },
-  roles,
-) => {
-  args
+export const authChecker = async ({ context: { account } }: ResolverData<AppContext>, roles: Roles[] = []) => {
+  if(!account) {
+    return false;
+  }
 
-  return true; // or false if access is denied
-};
+  const assigned = await getRepository(Role).find({
+    where: { name: Any(roles), account }
+  })
+
+  return assigned.length > 0;
+}
