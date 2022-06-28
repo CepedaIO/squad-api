@@ -7,8 +7,13 @@
     "outDir": "dist",
     "strictNullChecks": true,
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "emitDecoratorMetadata": true,
+    "typeRoots": ["src"],
+    "types": ["**/*.d.ts"]
   },
+  "files": [
+    "src/**/*.ts"
+  ],
   "exclude": [
     "dist",
     "node_modules"

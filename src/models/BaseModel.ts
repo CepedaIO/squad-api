@@ -1,8 +1,8 @@
-import {Column, Entity, Generated, PrimaryGeneratedColumn} from "typeorm";
+import {Column, Generated, PrimaryGeneratedColumn} from "typeorm";
 import {Field, ObjectType} from "type-graphql";
 
 @ObjectType()
-export class BaseModel {
+export abstract class BaseModel {
   @Field()
   @PrimaryGeneratedColumn()
   id!: number;

@@ -5,12 +5,12 @@ import {Session} from "./Session";
 
 @Entity('login_tokens')
 export class LoginToken extends BaseModel {
-  @Column()
+  @Column({ nullable: false })
   token: string;
 
   @OneToOne(() => Account, { nullable:false})
   @JoinColumn()
-  public account: Account;
+  public account?: Account;
 
   @OneToOne(() => Session, { nullable:false })
   @JoinColumn()

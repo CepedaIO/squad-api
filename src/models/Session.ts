@@ -6,8 +6,11 @@ import {BaseModel} from "./BaseModel";
 export class Session extends BaseModel {
   @ManyToOne(() => Account, { nullable:false })
   @JoinColumn()
-  account: Account;
+  account?: Account;
 
   @Column({ unique: true })
-  key!: string;
+  key: string;
+
+  @Column({ default: false })
+  authenticated: boolean;
 }

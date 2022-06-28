@@ -3,11 +3,9 @@ import {appConfig} from "./configs/app";
 import {buildSchema} from "type-graphql";
 import {ApolloServer} from "apollo-server";
 import {AccountResolver} from "./resolvers/AccountResolver";
-import {createConnection, getRepository} from "typeorm";
-import {AppContext} from "./types";
-import {Session} from "./models/Session";
-import {authChecker} from "./services/AuthChecker";
-import {decompress} from "./services/jwt";
+import {createConnection} from "typeorm";
+import {authChecker} from "./services/authChecker";
+import context from "./services/context";
 
 (async () => {
   await createConnection();
@@ -17,27 +15,10 @@ import {decompress} from "./services/jwt";
   });
 
   const server = new ApolloServer({
+    logger: console,
     schema,
     debug: appConfig.isDev,
-    context: async ({ req }) => {
-      const auth = req.headers.authorization || '';
-      const ctx:AppContext = { };
-
-      if(auth) {
-        const { account, session } = await decompress(auth);
-
-        /**
-         * Replace by memcache or other in-memory lookup
-         */
-        await getRepository(Session).findOneOrFail({
-          where: session
-        });
-
-        ctx.account = account;
-      }
-
-      return ctx;
-    }
+    context: context
   });
 
   // Start the server
