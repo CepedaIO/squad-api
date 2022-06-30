@@ -1,13 +1,11 @@
 import jwt from "jsonwebtoken";
 import {appConfig} from "../configs/app";
-import {Session} from "../models/Session";
-import {Account} from "../models/Account";
 
 export type JWTToken = string;
 export interface JWT {
-  account: Pick<Account, 'uuid'>
-  session: Pick<Session, 'uuid' | 'key'>
+  uuid: string;
+  key: string;
 }
 
-export const sign = (obj: JWT) => jwt.sign(obj, appConfig.jwtSecret);
-export const verify = (token: string) => jwt.verify(token, appConfig.jwtSecret) as JWT
+export const sign = (obj: JWT): JWTToken => jwt.sign(obj, appConfig.jwtSecret);
+export const verify = (token: JWTToken): JWT => jwt.verify(token, appConfig.jwtSecret) as JWT

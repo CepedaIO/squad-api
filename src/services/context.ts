@@ -1,26 +1,26 @@
-import {verify, JWT} from "./jwt";
-import {getRepository} from "typeorm";
+import {verify} from "./jwt";
 import {Session} from "../models/Session";
-import {Account} from "../models/Account";
-import {findOneOrFail} from "./typeorm";
+import {findOne} from "./typeorm";
 import {pick} from "lodash";
 
 export interface Context { }
 export interface SessionContext {
-  account: JWT['account']
-  session: JWT['session']
+  uuid: string;
+  key: string;
+  email: string;
+  authenticated: boolean;
 }
 
-export type AuthenticatedContext = SessionContext & {
-  session: { authenticated:true }
+export interface AuthenticatedContext extends SessionContext {
+  authenticated: true
 }
 
 export const isSessionContext = (obj:any): obj is SessionContext => {
-  return !!obj.account && !!obj.session;
+  return !!obj.email && !!obj.uuid;
 }
 
 export const isAuthenticatedContext = (obj:any): obj is AuthenticatedContext => {
-  return isSessionContext(obj) && obj.session['authenticated'] === true;
+  return isSessionContext(obj) && obj['authenticated'] === true;
 }
 
 const context = async ({ req }): Promise<Context | SessionContext> => {
@@ -32,12 +32,13 @@ const context = async ({ req }): Promise<Context | SessionContext> => {
     /**
      * Replace by memcache or other in-memory lookup
      */
-    const session = await findOneOrFail(Session, { where: jwt.session });
-    const account = await findOneOrFail(Account, { where: jwt.account });
+    const session = await findOne(Session, {
+      where: pick(jwt, 'uuid', 'key')
+    });
 
-    return {
-      account: pick(account, 'uuid'),
-      session: pick(session, 'uuid', 'key', 'authenticated') };
+    if(session) {
+      return pick(session, 'uuid', 'key', 'email', 'authenticated');
+    }
   }
 
   return { };

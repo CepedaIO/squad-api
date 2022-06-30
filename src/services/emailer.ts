@@ -1,9 +1,7 @@
 import { createTransport } from "nodemailer";
+import {appConfig} from "../configs/app";
 
 export const transporter = createTransport({
   service: 'gmail',
-  auth: {
-    user: 'sharedcepedaio@gmail.com',
-    pass: 'czcaivgpvvxexmdp'
-  }
+  auth: appConfig.emailer
 });

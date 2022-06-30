@@ -1,6 +1,5 @@
 import {BaseModel} from "./BaseModel";
 import {Column, Entity, JoinColumn, OneToOne} from "typeorm";
-import {Account} from "./Account";
 import {Session} from "./Session";
 
 @Entity('login_tokens')
@@ -8,11 +7,11 @@ export class LoginToken extends BaseModel {
   @Column({ nullable: false })
   token: string;
 
-  @OneToOne(() => Account, { nullable:false})
-  @JoinColumn()
-  public account?: Account;
-
-  @OneToOne(() => Session, { nullable:false })
+  @OneToOne(() => Session, {
+    nullable: false,
+    eager: true,
+    onDelete: 'CASCADE'
+  })
   @JoinColumn()
   public session: Session;
 }

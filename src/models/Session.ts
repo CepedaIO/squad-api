@@ -1,16 +1,17 @@
-import {Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn} from "typeorm";
-import {Account} from "./Account";
+import {Column, Entity} from "typeorm";
 import {BaseModel} from "./BaseModel";
 
 @Entity('sessions')
 export class Session extends BaseModel {
-  @ManyToOne(() => Account, { nullable:false })
-  @JoinColumn()
-  account?: Account;
-
-  @Column({ unique: true })
+  @Column({ unique: true, nullable: false })
   key: string;
+
+  @Column({ nullable: false})
+  email: string;
 
   @Column({ default: false })
   authenticated: boolean;
+
+  @Column({ nullable: false })
+  expiresOn: Date
 }
