@@ -1,8 +1,8 @@
 import {Column, Entity} from "typeorm";
-import {BaseModel} from "./BaseModel";
+import {MutBaseModel} from "./BaseModel";
 
 @Entity('sessions')
-export class Session extends BaseModel {
+export class Session extends MutBaseModel {
   @Column({ unique: true, nullable: false })
   key: string;
 

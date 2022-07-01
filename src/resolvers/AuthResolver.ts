@@ -1,7 +1,7 @@
-import {Arg, Ctx, Mutation, Query, Resolver} from "type-graphql";
+import {Arg, Ctx, Int, Mutation, Query, Resolver} from "type-graphql";
 import {SimpleResponse} from "../models/SimpleResponse";
 import {Context, isAuthenticatedContext, isSessionContext} from "../services/context";
-import {findAndDelete, insert, remove, save} from "../services/typeorm";
+import {findAndDelete, getRepository, insert, remove, save} from "../services/typeorm";
 import {LoginToken} from "../models/LoginToken";
 import {Session} from "../models/Session";
 import {getManager} from "typeorm";
@@ -11,6 +11,13 @@ import {pick} from "lodash";
 import {join} from "path";
 import {appConfig} from "../configs/app";
 import {transporter} from "../services/emailer";
+import {DateTime} from "luxon";
+import {URL} from "url";
+
+enum SessionExpiration {
+  ONE_HOUR,
+  ONE_WEEK
+}
 
 @Resolver()
 export class AuthResolver {
@@ -25,6 +32,7 @@ export class AuthResolver {
   async useLoginToken(
     @Arg("uuid") uuid: string,
     @Arg("token") token: string,
+    @Arg("expires", () => Int) expires: SessionExpiration,
     @Ctx() ctx: Context
   ): Promise<SimpleResponse> {
     if(isAuthenticatedContext(ctx)) {
@@ -33,7 +41,13 @@ export class AuthResolver {
 
     try {
       const {session} = await findAndDelete(LoginToken, { uuid, token });
-      await save(Session, { ...session, authenticated: true });
+      const expiresOn = expires === SessionExpiration.ONE_HOUR ? DateTime.now().plus({ hour:1 }) : DateTime.now().plus({ weeks:2 })
+
+      await save(Session, {
+        ...session,
+        authenticated: true,
+        expiresOn
+      });
     } catch (e) {
       return { success: false, result: 'Go away' };
     }
@@ -53,12 +67,15 @@ export class AuthResolver {
 
     const {link, token} = await getManager().transaction(async (manager) => {
       if (isSessionContext(ctx)) {
-        await remove(Session, ctx, manager);
+        await remove(Session, pick(ctx, 'uuid', 'key'), manager);
       }
 
       const session = await insert(Session, {
         key: randomBytes(16).toString('hex'),
-        email
+        email,
+        expiresOn: DateTime.now().plus({
+          minute: 10
+        })
       }, manager);
 
       const login = await insert(LoginToken, {
@@ -67,15 +84,16 @@ export class AuthResolver {
       }, manager)
 
       const token = await sign(pick(session, 'uuid', 'key'));
-      const link = join(appConfig.origin, 'login', login.uuid, login.token);
+      const url = new URL(appConfig.origin)
+      url.pathname = join('login', login.uuid, login.token);
 
-      return {link, token};
+      return {link: url.toString(), token};
     })
 
     await transporter.sendMail({
       from: 'no-reply@cepeda.io',
       to: email,
-      subject: 'Welcome to CepedaIO/Event-Matcher!',
+      subject: 'Login request to CepedaIO/Event-Matcher!',
       html: `
 <html>
   <body>
@@ -89,26 +107,21 @@ export class AuthResolver {
     </p>
     <ul style="list-style: none">
       <li style="margin-bottom:10px">
-        <a href="${link}">
-          <button style="background-color:#3b83f6;color:white;width:165px;height:40px;cursor:pointer;border:0;">Expire after infinity</button>
+        <a href="${link}?expires=0">
+          <button style="background-color:#3b83f6;color:white;width:165px;height:40px;cursor:pointer;border:0;">Expire after 1 hour</button>
         </a>
       </li>
       <li style="margin-bottom:10px">
-        <a href="${link}?expire=1">
-          <button style="background-color:#3b83f6;color:white;width:165px;height:40px;cursor:pointer;border:0;">Expire after 1 hour</button>
+        <a href="${link}?expires=1">
+          <button style="background-color:#3b83f6;color:white;width:165px;height:40px;cursor:pointer;border:0;">Expire after 2 weeks</button>
         </a>
       </li>
       <li style="margin-bottom:10px">
         <a href="${link}?reject=true">
           <button style="background-color:#fb7186;color:white;width:165px;height:40px;cursor:pointer;border:0;">Don't Login</button>
         </a>
-       </li>
+      </li>
     </ul>
-    <sub>
-      Note: Expire after infinity means that after an infinite amount of time has passed, you will be prompted to login again.
-      <br />
-      This is a good choice if you're using a personal computer
-    </sub>
   </body>
 </html>
     `

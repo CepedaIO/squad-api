@@ -1,7 +1,8 @@
 import {verify} from "./jwt";
 import {Session} from "../models/Session";
-import {findOne} from "./typeorm";
+import {findOne, remove} from "./typeorm";
 import {pick} from "lodash";
+import {DateTime} from "luxon";
 
 export interface Context { }
 export interface SessionContext {
@@ -37,6 +38,11 @@ const context = async ({ req }): Promise<Context | SessionContext> => {
     });
 
     if(session) {
+      if(DateTime.fromJSDate(session.expiresOn) <= DateTime.now()) {
+        await remove(Session, session);
+        return {};
+      }
+
       return pick(session, 'uuid', 'key', 'email', 'authenticated');
     }
   }

@@ -14,11 +14,11 @@ export abstract class BaseModel {
 
   @Field()
   @Column("timestamp", { default: () => "CURRENT_TIMESTAMP" })
-  created!: Date;
+  createdOn!: Date;
 }
 
 export class MutBaseModel extends BaseModel {
   @Field()
   @Column("timestamp", { default: () => "CURRENT_TIMESTAMP", onUpdate: "CURRENT_TIMESTAMP"})
-  modified!: Date;
+  modifiedOn!: Date;
 }

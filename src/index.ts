@@ -22,6 +22,9 @@ import {AuthResolver} from "./resolvers/AuthResolver";
   });
 
   // Start the server
-  const { url } = await server.listen(appConfig.port);
+  const { url } = await server.listen({
+    host: "0.0.0.0",
+    port: appConfig.port
+  });
   console.log(`Server is running, GraphQL Playground available at ${url}`);
 })()
