@@ -1,6 +1,7 @@
 import { createTransport } from "nodemailer";
 import {appConfig} from "../configs/app";
 
+console.log("emailer:", appConfig.emailer);
 export const transporter = createTransport({
   service: 'gmail',
   auth: appConfig.emailer

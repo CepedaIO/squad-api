@@ -85,7 +85,7 @@ export class AuthResolver {
 
       const token = await sign(pick(session, 'uuid', 'key'));
       const url = new URL(appConfig.origin)
-      url.pathname = join('login', login.uuid, login.token);
+      url.pathname = join('login-with', login.uuid, login.token);
 
       return {link: url.toString(), token};
     })
