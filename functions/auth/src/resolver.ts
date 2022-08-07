@@ -1,18 +1,18 @@
 import {Arg, Ctx, Int, Mutation, Query, Resolver} from "type-graphql";
-import {SimpleResponse} from "../models/SimpleResponse";
-import {Context, isAuthenticatedContext, isSessionContext} from "../services/context";
-import {findAndDelete, getRepository, insert, remove, save} from "../services/typeorm";
-import {LoginToken} from "../models/LoginToken";
-import {Session} from "../models/Session";
+import {SimpleResponse} from "./models/SimpleResponse";
+import {findAndDelete, insert, remove, save} from "./services/typeorm";
+import {LoginToken} from "./models/LoginToken";
+import {Session} from "./models/Session";
 import {getManager} from "typeorm";
 import {randomBytes} from "crypto";
-import {sign} from "../services/jwt";
+import {sign} from "./services/jwt";
 import {pick} from "lodash";
 import {join} from "path";
-import {appConfig} from "../configs/app";
-import {transporter} from "../services/emailer";
+import {appConfig} from "./configs/app";
+import {transporter} from "./services/emailer";
 import {DateTime} from "luxon";
 import {URL} from "url";
+import {Context, isAuthenticatedContext, isSessionContext} from "./services/context";
 
 enum SessionExpiration {
   ONE_HOUR,
@@ -23,17 +23,17 @@ enum SessionExpiration {
 export class AuthResolver {
   @Query(() => SimpleResponse)
   async authenticated(
-    @Ctx() ctx: Context
+  @Ctx() ctx: Context
   ): Promise<SimpleResponse> {
     return {success: isAuthenticatedContext(ctx), result: 'and now you know'};
   }
 
   @Mutation(() => SimpleResponse)
   async useLoginToken(
-    @Arg("uuid") uuid: string,
-    @Arg("token") token: string,
-    @Arg("expires", () => Int) expires: SessionExpiration,
-    @Ctx() ctx: Context
+  @Arg("uuid") uuid: string,
+  @Arg("token") token: string,
+  @Arg("expires", () => Int) expires: SessionExpiration,
+  @Ctx() ctx: Context
   ): Promise<SimpleResponse> {
     if(isAuthenticatedContext(ctx)) {
       return { success: true, result: 'Already logged in, silly goose' };
@@ -57,8 +57,8 @@ export class AuthResolver {
 
   @Mutation(() => SimpleResponse)
   async login(
-    @Arg("email") email: string,
-    @Ctx() ctx: Context
+  @Arg("email") email: string,
+  @Ctx() ctx: Context
   ): Promise<SimpleResponse> {
     if(isAuthenticatedContext(ctx) && ctx.email === email) {
       const token = await sign(pick(ctx, 'uuid', 'key'));
@@ -130,3 +130,5 @@ export class AuthResolver {
     return {success: true, result: token};
   }
 }
+
+

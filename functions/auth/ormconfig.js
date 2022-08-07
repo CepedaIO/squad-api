@@ -1,3 +1,5 @@
+const { join } = require('path');
+
 module.exports = {
   type: 'postgres',
   debug: process.env.NODE_ENV !== 'production',
@@ -7,7 +9,7 @@ module.exports = {
   password: process.env.POSTGRES_PASSWORD || 'password',
   database: process.env.POSTGRES_DB || 'event-matcher',
   entities: [
-    'src/models/**/**.{ts,js}',
+    join(__dirname, '**', '**.{ts,js}'),
   ],
   synchronize: true
 };

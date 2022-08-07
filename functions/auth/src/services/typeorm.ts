@@ -1,7 +1,4 @@
-import {getRepository as _getRepository, EntityTarget, DeepPartial, EntityManager, ObjectLiteral} from "typeorm";
-import {ObjectID} from "typeorm/driver/mongodb/typings";
-import {FindConditions} from "typeorm/find-options/FindConditions";
-import {FindOneOptions} from "typeorm/find-options/FindOneOptions";
+import {getRepository as _getRepository, EntityTarget, DeepPartial, EntityManager, ObjectLiteral, ObjectID, FindConditions, FindOneOptions} from "typeorm";
 import {BaseModel} from "../models/BaseModel";
 
 type DeleteCriteria<T> = string | string[] | number | number[] | Date | Date[] | ObjectID | ObjectID[] | FindConditions<T>;

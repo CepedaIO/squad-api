@@ -3,4 +3,4 @@ dist
 *.log
 .idea
 *.graghql
-.env
+functions/auth/.env

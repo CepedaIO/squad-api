@@ -3,6 +3,7 @@ import {Session} from "../models/Session";
 import {findOne, remove} from "./typeorm";
 import {pick} from "lodash";
 import {DateTime} from "luxon";
+import {createConnection} from "typeorm";
 
 export interface Context { }
 export interface SessionContext {
@@ -24,7 +25,8 @@ export const isAuthenticatedContext = (obj:any): obj is AuthenticatedContext => 
   return isSessionContext(obj) && obj['authenticated'] === true;
 }
 
-const context = async ({ req }): Promise<Context | SessionContext> => {
+export const context = async ({ req }): Promise<Context | SessionContext> => {
+  await createConnection();
   const auth = req.headers.authorization || '';
 
   if(!!auth) {
@@ -49,5 +51,3 @@ const context = async ({ req }): Promise<Context | SessionContext> => {
 
   return { };
 }
-
-export default context;

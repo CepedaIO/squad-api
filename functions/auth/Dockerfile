@@ -1,7 +1,7 @@
 FROM vlegm/dev-alpine:latest
 
 WORKDIR /mnt/host
-COPY . .
+COPY ../.. .
 RUN yarn install
 
 WORKDIR /mnt/host/src

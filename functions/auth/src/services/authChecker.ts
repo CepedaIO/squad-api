@@ -1,6 +1,7 @@
 import {ResolverData} from "type-graphql/dist/interfaces/ResolverData";
-import {SessionContext} from "./context";
+
 import {Roles} from "../types";
+import {SessionContext} from "../services/context";
 
 export const authChecker = async ({ context }: ResolverData<SessionContext>, roles: Roles[] = []) => {
 /*
