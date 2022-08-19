@@ -1,7 +1,7 @@
-import {Arg, Ctx, Int, Mutation, Query, Resolver} from "type-graphql";
+import {Arg, Ctx, Int, Mutation, Query, Resolver, UseMiddleware} from "type-graphql";
 import {SimpleResponse} from "../models/SimpleResponse";
 import {Context, isAuthenticatedContext, isSessionContext} from "../services/context";
-import {findAndDelete, getRepository, insert, remove, save} from "../services/typeorm";
+import {findAndDelete, insert, remove, save} from "../services/typeorm";
 import {LoginToken} from "../models/LoginToken";
 import {Session} from "../models/Session";
 import {getManager} from "typeorm";
@@ -13,6 +13,7 @@ import {appConfig} from "../configs/app";
 import {transporter} from "../services/emailer";
 import {DateTime} from "luxon";
 import {URL} from "url";
+import {DevOnly} from "../middleware/dev-only";
 
 enum SessionExpiration {
   ONE_HOUR,
@@ -56,6 +57,25 @@ export class AuthResolver {
   }
 
   @Mutation(() => SimpleResponse)
+  @UseMiddleware(DevOnly)
+  async getNewToken(
+    @Arg('email') email: string
+  ): Promise<SimpleResponse> {
+    const session = await insert(Session, {
+      key: randomBytes(16).toString('hex'),
+      email,
+      authenticated: true,
+      expiresOn: DateTime.now().plus({
+        minutes: 5
+      })
+    });
+
+    const token = await sign(pick(session, 'uuid', 'key'));
+
+    return {success: true, result: token};
+  }
+
+  @Mutation(() => SimpleResponse)
   async login(
     @Arg("email") email: string,
     @Ctx() ctx: Context
@@ -74,7 +94,7 @@ export class AuthResolver {
         key: randomBytes(16).toString('hex'),
         email,
         expiresOn: DateTime.now().plus({
-          minute: 10
+          minutes: 10
         })
       }, manager);
 
@@ -88,7 +108,7 @@ export class AuthResolver {
       url.pathname = join('login-with', login.uuid, login.token);
 
       return {link: url.toString(), token};
-    })
+    });
 
     await transporter.sendMail({
       from: 'no-reply@cepeda.io',

@@ -10,6 +10,11 @@ export const appConfig = {
   emailer: {
     user: env.EMAILER_USER,
     pass: env.EMAILER_PASS
+  },
+  testMailer: {
+    host: 'host.docker.internal',
+    port: 7777,
+
   }
 }
 
