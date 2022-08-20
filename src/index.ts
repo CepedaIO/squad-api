@@ -3,15 +3,18 @@ import {appConfig} from "./configs/app";
 import {buildSchema} from "type-graphql";
 import {ApolloServer} from "apollo-server";
 import {createConnection} from "typeorm";
-import {authChecker} from "./services/authChecker";
-import context from "./services/context";
-import {AuthResolver} from "./resolvers/AuthResolver";
+import {authChecker} from "./utils/authChecker";
+import context, {Context} from "./utils/context";
+import AuthResolver from "./resolvers/AuthResolver";
+import EventResolver from "./resolvers/EventResolver";
+import {ResolverData} from "type-graphql/dist/interfaces/ResolverData";
 
 (async () => {
   await createConnection();
   const schema = await buildSchema({
-    resolvers: [AuthResolver],
-    authChecker
+    resolvers: [AuthResolver, EventResolver],
+    authChecker,
+    container: ({ context }: ResolverData<Context>) => context.container
   });
 
   const server = new ApolloServer({

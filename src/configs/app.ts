@@ -5,7 +5,7 @@ export const appConfig = {
   clientPort: env.CLIENT_PORT || 3000,
   origin: '',
   isProd: env.NODE_ENV === 'production',
-  isDev: false,
+  isDev: env.NODE_ENV !== 'production',
   jwtSecret: 'w7%/L$0UE~9ukMWwA[FM%+bt:5]tKV',
   emailer: {
     user: env.EMAILER_USER,
@@ -18,5 +18,4 @@ export const appConfig = {
   }
 }
 
-appConfig.isDev = !appConfig.isProd;
 appConfig.origin = appConfig.isProd ? 'https://cepeda.io': `http://localhost:${appConfig.clientPort}`;

@@ -3,8 +3,61 @@ import {ObjectID} from "typeorm/driver/mongodb/typings";
 import {FindConditions} from "typeorm/find-options/FindConditions";
 import {FindOneOptions} from "typeorm/find-options/FindOneOptions";
 import {BaseModel} from "../models/BaseModel";
+import {Service} from "typedi";
+import {DateTime} from "luxon";
 
 type DeleteCriteria<T> = string | string[] | number | number[] | Date | Date[] | ObjectID | ObjectID[] | FindConditions<T>;
+
+export const DateTimeColumn = {
+  type: Date,
+  transformer: {
+    to(value: DateTime): Date { return value.toJSDate(); },
+    from(value: Date): DateTime { return DateTime.fromJSDate(value); }
+  }
+};
+
+@Service()
+export class Database {
+  constructor(
+    private manager: EntityManager
+  ) {}
+
+  async insert<T extends ObjectLiteral, K extends DeepPartial<T> = DeepPartial<T>>(entityClass: EntityTarget<T>, entity: K): Promise<T> {
+    return insert(entityClass, entity, this.manager);
+  }
+
+  async save<T extends ObjectLiteral, K extends DeepPartial<T> = DeepPartial<T>>(entityClass: EntityTarget<T>, entity: K): Promise<T> {
+    return save(entityClass, entity, this.manager);
+  }
+
+  async remove<T extends ObjectLiteral, C extends DeleteCriteria<T> = DeleteCriteria<T>>(entityClass: EntityTarget<T>, criteria: C): Promise<number> {
+    return remove(entityClass, criteria, this.manager);
+  }
+
+  async upsert<T extends BaseModel>(entityClass: EntityTarget<T>, data: DeepPartial<T>) {
+    return upsert(entityClass, data, this.manager);
+  }
+
+  async delsert<T extends BaseModel, D extends DeepPartial<T> = DeepPartial<T>>(entityClass: EntityTarget<T>, criteria: DeleteCriteria<T>, data: D): Promise<T> {
+    return delsert(entityClass, criteria, data, this.manager)
+  }
+
+  async findOne<T extends ObjectLiteral, K = FindOneOptions<T>>(entityClass: EntityTarget<T>, options: K): Promise<T | undefined> {
+    return findOne(entityClass, options, this.manager);
+  }
+
+  async findOneOrFail<T extends ObjectLiteral, K extends FindOneOptions<T> = FindOneOptions<T>>(entityClass: EntityTarget<T>, options: K): Promise<T> {
+    return findOneOrFail(entityClass, options, this.manager);
+  }
+
+  async findOrInsert<T extends ObjectLiteral, K extends DeepPartial<T> = DeepPartial<T>>(entityClass: EntityTarget<T>, entity: K): Promise<T> {
+    return findOrInsert(entityClass, entity);
+  }
+
+  async findAndDelete<T extends ObjectLiteral, D extends FindConditions<T> = FindConditions<T>>(entityClass: EntityTarget<T>, criteria: FindConditions<T>): Promise<T> {
+    return findAndDelete(entityClass, criteria, this.manager);
+  }
+}
 
 export const getRepository = <T extends ObjectLiteral>(entityClass: EntityTarget<T>, manager?: EntityManager) => manager ? manager.getRepository(entityClass) : _getRepository(entityClass);
 export const insert = async <T extends ObjectLiteral, K extends DeepPartial<T> = DeepPartial<T>>(entityClass: EntityTarget<T>, entity: K, manager?: EntityManager): Promise<T> => {
@@ -43,7 +96,7 @@ export const upsert = async <T extends BaseModel>(entityClass: EntityTarget<T>, 
   return insert(entityClass, data, manager);
 }
 
-export const remsert = async <T extends BaseModel, D extends DeepPartial<T> = DeepPartial<T>>(entityClass: EntityTarget<T>, criteria: DeleteCriteria<T>, data: D, manager?: EntityManager): Promise<T> => {
+export const delsert = async <T extends BaseModel, D extends DeepPartial<T> = DeepPartial<T>>(entityClass: EntityTarget<T>, criteria: DeleteCriteria<T>, data: D, manager?: EntityManager): Promise<T> => {
   await remove(entityClass, criteria, manager);
   return await insert(entityClass, data, manager);
 }
