@@ -8,15 +8,11 @@ export abstract class BaseModel {
   id!: number;
 
   @Field()
-  @Column()
-  @Generated('uuid')
-  uuid!: string;
-
-  @Field()
   @Column("timestamp", { default: () => "CURRENT_TIMESTAMP" })
   createdOn!: Date;
 }
 
+@ObjectType()
 export class MutBaseModel extends BaseModel {
   @Field()
   @Column("timestamp", { default: () => "CURRENT_TIMESTAMP", onUpdate: "CURRENT_TIMESTAMP"})

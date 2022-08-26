@@ -1,10 +1,18 @@
 import {Field, InputType, ObjectType} from "type-graphql";
-import {Column, Entity, ManyToOne} from "typeorm";
+import {Column, Entity, JoinColumn, ManyToOne} from "typeorm";
 import {MutBaseModel} from "./BaseModel";
 import {Membership} from "./Membership";
 
-@InputType('AvailabilityIn')
-@ObjectType('AvailabilityOut')
+@InputType()
+export class RangeForm {
+  @Field()
+  start: Date;
+
+  @Field()
+  end: Date;
+}
+
+@ObjectType()
 @Entity('availabilities')
 export class Availability extends MutBaseModel {
   @Field()
@@ -15,7 +23,7 @@ export class Availability extends MutBaseModel {
   @Column()
   end: Date;
 
-  @Field(() => Membership, { nullable: true })
+  eventId
   @ManyToOne(() => Membership, membership => membership.availability)
   membership: Membership;
 }

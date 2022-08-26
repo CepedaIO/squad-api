@@ -1,11 +1,25 @@
-import {Column, Entity, OneToMany} from "typeorm";
+import {Column, Entity, JoinColumn, OneToMany, OneToOne} from "typeorm";
 import {Field, InputType, ObjectType} from "type-graphql";
 import {Duration} from "luxon";
 import {MutBaseModel} from "./BaseModel";
 import {Membership} from "./Membership";
 
-@InputType('EventIn')
-@ObjectType('EventOut')
+@InputType()
+export class EventInput {
+  @Field()
+  name: string;
+
+  @Field()
+  description: string;
+
+  @Field()
+  precision: string;
+
+  @Field()
+  factor: number;
+}
+
+@ObjectType()
 @Entity('events')
 export class Event extends MutBaseModel {
   @Field()
@@ -24,9 +38,11 @@ export class Event extends MutBaseModel {
   @Column()
   factor: number;
 
-  @Field(() => Membership)
-  @OneToMany(() => Membership, membership => membership.event)
-  memberships: Membership[]
+  @Field(() => [Membership])
+  @OneToMany(() => Membership, membership => membership.event, {
+    cascade: ['insert']
+  })
+  memberships: Membership[];
 
   set duration(duration: Duration) {
     this.precision = Object.keys(duration)[0];

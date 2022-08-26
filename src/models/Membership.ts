@@ -1,25 +1,44 @@
-import {Column, Entity, ManyToOne, OneToMany} from "typeorm";
+import {Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne} from "typeorm";
 import {Field, InputType, ObjectType} from "type-graphql";
 import {BaseModel} from "./BaseModel";
 import {Availability} from "./Availability";
 import {Event} from "./Event";
+import {MembershipPermissions} from "./MembershipPermission";
 
-@InputType('MembershipIn')
+@InputType()
+export class MembershipInput {
+  @Field()
+  email: string;
+
+  @Field()
+  displayName: string;
+
+  @Field()
+  eventId: number;
+}
+
 @ObjectType()
-@Entity('MembershipOut')
+@Entity('memberships')
 export class Membership extends BaseModel {
   @Field()
+  @Column()
   email: string;
 
   @Field()
   @Column()
   displayName: string;
 
-  @Field(() => Event, { nullable: true })
   @ManyToOne(() => Event, event => event.memberships)
   event: Event;
 
-  @Field(() => Availability)
-  @OneToMany(() => Availability, availability => availability.membership)
+  @OneToOne(() => MembershipPermissions, permissions => permissions.membership, {
+    cascade: ['insert']
+  })
+  permissions: MembershipPermissions;
+
+  @Field(() => [Availability])
+  @OneToMany(() => Availability, availability => availability.membership, {
+    cascade: ['insert']
+  })
   availability: Availability[];
 }

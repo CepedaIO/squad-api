@@ -22,6 +22,10 @@ export class Database {
     private manager: EntityManager
   ) {}
 
+  create<T extends ObjectLiteral>(entityClass: EntityTarget<T>, entityLike: DeepPartial<T>): T {
+    return getRepository<T>(entityClass).create(entityLike);
+  }
+
   async insert<T extends ObjectLiteral, K extends DeepPartial<T> = DeepPartial<T>>(entityClass: EntityTarget<T>, entity: K): Promise<T> {
     return insert(entityClass, entity, this.manager);
   }
@@ -62,24 +66,21 @@ export class Database {
 export const getRepository = <T extends ObjectLiteral>(entityClass: EntityTarget<T>, manager?: EntityManager) => manager ? manager.getRepository(entityClass) : _getRepository(entityClass);
 export const insert = async <T extends ObjectLiteral, K extends DeepPartial<T> = DeepPartial<T>>(entityClass: EntityTarget<T>, entity: K, manager?: EntityManager): Promise<T> => {
   const repository = getRepository(entityClass, manager);
-  const { generatedMaps } = await repository.insert(entity);
+  const results = await repository.insert(entity);
 
-  if(generatedMaps.length < 0) {
+  await entity.reload();
+  if(results.generatedMaps.length < 0) {
     throw new Error('No results returned from insert!');
   }
 
   return repository.merge(
     repository.create(),
-    generatedMaps[0] as DeepPartial<T>,
+    results.generatedMaps[0] as DeepPartial<T>,
     entity
   );
 }
 
 export const save = async <T extends ObjectLiteral, K extends DeepPartial<T> = DeepPartial<T>>(entityClass: EntityTarget<T>, entity: K, manager?: EntityManager): Promise<T> => {
-  if(!entity['id']) {
-    throw new Error('Cannot update entity without an id');
-  }
-
   return getRepository(entityClass, manager).save(entity);
 };
 

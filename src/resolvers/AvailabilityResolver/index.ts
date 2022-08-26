@@ -1,0 +1,25 @@
+import {Arg, Mutation, Resolver} from "type-graphql";
+import {Authenticated} from "../../decorators/Authenticated";
+import {Transaction} from "../../decorators/Transaction";
+import {Service} from "typedi";
+import {Database} from "../../utils/typeorm";
+import {Availability} from "../../models/Availability";
+
+@Service()
+@Resolver()
+export default class AvailabilityResolver {
+  constructor(
+  private db: Database,
+  ) {}
+
+  @Authenticated()
+  @Transaction()
+  @Mutation(() => Availability, {
+    description: 'Create availability'
+  })
+  async upsertAvailability(
+  @Arg("payload", () => Availability) availability: Availability
+  ): Promise<Availability> {
+    return this.db.upsert(Availability, availability);
+  }
+}

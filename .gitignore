@@ -4,3 +4,4 @@ dist
 .idea
 *.graghql
 .env
+schema.graphql

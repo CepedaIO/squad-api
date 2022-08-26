@@ -1,11 +1,15 @@
 import {appConfig} from "../configs/app";
-import {Middleware, NextFn} from "type-graphql/dist/interfaces/Middleware";
+import {NextFn} from "type-graphql/dist/interfaces/Middleware";
 import {ResolverData} from "type-graphql/dist/interfaces/ResolverData";
+import {createMethodDecorator} from "type-graphql";
+import {Context} from "../utils/context";
 
-export const DevOnly:Middleware = (action: ResolverData, next: NextFn) => {
-  if(!appConfig.isDev) {
-    throw new Error('Fuck off');
-  } else {
-    return next();
-  }
+export const DevOnly = () => {
+  return createMethodDecorator(({ context }: ResolverData<Context>, next: NextFn) => {
+    if(!appConfig.isDev) {
+      throw new Error('Fuck off');
+    } else {
+      return next();
+    }
+  });
 }
