@@ -68,11 +68,6 @@ export const insert = async <T extends ObjectLiteral, K extends DeepPartial<T> =
   const repository = getRepository(entityClass, manager);
   const results = await repository.insert(entity);
 
-  await entity.reload();
-  if(results.generatedMaps.length < 0) {
-    throw new Error('No results returned from insert!');
-  }
-
   return repository.merge(
     repository.create(),
     results.generatedMaps[0] as DeepPartial<T>,

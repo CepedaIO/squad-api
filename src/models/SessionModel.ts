@@ -5,6 +5,7 @@ import {Field} from "type-graphql";
 @Entity('sessions')
 export class SessionModel extends MutBaseModel {
   @Field()
+  @Column()
   @Generated('uuid')
   uuid!: string;
 

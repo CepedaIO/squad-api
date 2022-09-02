@@ -17,9 +17,6 @@ export default class CreateEventInput implements ICreateEventInput {
   factor: number;
 
   @Field()
-  email: string;
-
-  @Field()
   displayName: string;
 
   @Field(() => [RangeForm])
