@@ -3,7 +3,7 @@ import {Authenticated} from "../../decorators/Authenticated";
 import {Transaction} from "../../decorators/Transaction";
 import {Service} from "typedi";
 import {Database} from "../../utils/typeorm";
-import {Membership} from "../../models/Membership";
+import {MembershipModel} from "../../models/MembershipModel";
 
 @Service()
 @Resolver()
@@ -14,12 +14,12 @@ export default class MembershipResolver {
 
   @Authenticated()
   @Transaction()
-  @Mutation(() => Membership, {
+  @Mutation(() => MembershipModel, {
     description: 'Create a membership'
   })
   async upsertMembership(
-  @Arg("payload", () => Membership) membership: Membership
-  ): Promise<Membership> {
-    return this.db.upsert(Membership, membership);
+  @Arg("payload", () => MembershipModel) membership: MembershipModel
+  ): Promise<MembershipModel> {
+    return this.db.upsert(MembershipModel, membership);
   }
 }

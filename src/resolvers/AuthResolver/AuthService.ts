@@ -1,11 +1,11 @@
 import {Context, isAuthenticatedContext, isSessionContext} from "../../utils/context";
 import {Database} from "../../utils/typeorm";
-import {Session} from "../../models/Session";
+import {SessionModel} from "../../models/SessionModel";
 import {randomBytes} from "crypto";
 import {DateTime} from "luxon";
 import {sign} from "../../utils/jwt";
 import {pick} from "lodash";
-import {LoginToken} from "../../models/LoginToken";
+import {LoginTokenModel} from "../../models/LoginTokenModel";
 import {URL} from "url";
 import {appConfig} from "../../configs/app";
 import {join} from "path";
@@ -25,7 +25,7 @@ export default class AuthService {
   ) {}
 
   async getNewToken(email: string): Promise<SimpleResponse> {
-    const session = await this.db.insert(Session, {
+    const session = await this.db.insert(SessionModel, {
       key: randomBytes(16).toString('hex'),
       email,
       authenticated: true,
@@ -46,10 +46,10 @@ export default class AuthService {
     }
 
     if (isSessionContext(ctx)) {
-      await this.db.remove(Session, pick(ctx, 'uuid', 'key'));
+      await this.db.remove(SessionModel, pick(ctx, 'uuid', 'key'));
     }
 
-    const session = await this.db.insert(Session, {
+    const session = await this.db.insert(SessionModel, {
       key: randomBytes(16).toString('hex'),
       email,
       expiresOn: DateTime.now().plus({
@@ -57,7 +57,7 @@ export default class AuthService {
       })
     });
 
-    const login = await this.db.insert(LoginToken, {
+    const login = await this.db.insert(LoginTokenModel, {
       token: randomBytes(16).toString('hex'),
       session
     })
@@ -113,10 +113,10 @@ export default class AuthService {
     }
 
     try {
-      const {session} = await this.db.findAndDelete(LoginToken, { uuid, token });
+      const {session} = await this.db.findAndDelete(LoginTokenModel, { uuid, token });
       const expiresOn = expires === SessionExpiration.ONE_HOUR ? DateTime.now().plus({ hour:1 }) : DateTime.now().plus({ weeks:2 })
 
-      await this.db.save(Session, {
+      await this.db.save(SessionModel, {
         ...session,
         authenticated: true,
         expiresOn

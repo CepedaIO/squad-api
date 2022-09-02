@@ -1,13 +1,13 @@
 import {Arg, Ctx, Mutation, Resolver} from "type-graphql";
-import {Event} from "../../models/Event";
+import {EventModel} from "../../models/EventModel";
 import {Authenticated} from "../../decorators/Authenticated";
 import {Transaction} from "../../decorators/Transaction";
 import {Service} from "typedi";
 import {Database} from "../../utils/typeorm";
-import CreateEventInput from "./CreateEventInput";
-import {Membership} from "../../models/Membership";
-import {Availability} from "../../models/Availability";
+import {MembershipModel} from "../../models/MembershipModel";
+import {AvailabilityModel} from "../../models/AvailabilityModel";
 import {AuthenticatedContext} from "../../utils/context";
+import CreateEventInput from "./CreateEventInput";
 
 @Service()
 @Resolver()
@@ -18,29 +18,26 @@ export default class EventResolver {
 
   @Authenticated()
   @Transaction()
-  @Mutation(() => Event, {
+  @Mutation(() => EventModel, {
     description: 'Create an event'
   })
   async createEvent(
     @Arg("payload", () => CreateEventInput) payload: CreateEventInput,
     @Ctx() ctx: AuthenticatedContext
-  ): Promise<Event> {
-    const event = this.db.create(Event, {
+  ): Promise<EventModel> {
+    const event = this.db.create(EventModel, {
       ...payload,
       memberships: [
-        this.db.create(Membership, {
+        this.db.create(MembershipModel, {
           displayName: payload.displayName,
           email: ctx.email,
-          availability: payload.availability.map((form) =>
-            this.db.create(Availability, form)
+          availabilities: payload.availabilities.map((form) =>
+            this.db.create(AvailabilityModel, form)
           )
         })
       ]
     });
 
-    const result = await this.db.save(Event, event);
-
-    debugger;
-    return result;
+    return await this.db.save(EventModel, event);
   }
 }

@@ -1,19 +1,19 @@
 import {MutBaseModel} from "./BaseModel";
 import {Column, Entity, JoinColumn, OneToOne} from "typeorm";
 import {Field, InputType, ObjectType} from "type-graphql";
-import {Membership} from "./Membership";
+import {MembershipModel} from "./MembershipModel";
 
 @ObjectType('MembershipPermissionOut')
 @InputType('MembershipPermissionIn')
 @Entity('membership_permissions')
-export class MembershipPermissions extends MutBaseModel {
+export class MembershipPermissionsModel extends MutBaseModel {
   @Column()
   @Field()
   membershipId: number;
 
-  @OneToOne(() => Membership)
+  @OneToOne(() => MembershipModel)
   @JoinColumn()
-  membership: Membership;
+  membership: MembershipModel;
 
   @Field()
   @Column({ default: false })

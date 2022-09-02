@@ -1,10 +1,10 @@
 import {BaseModel} from "./BaseModel";
 import {Column, Entity, Generated, JoinColumn, OneToOne} from "typeorm";
-import {Session} from "./Session";
+import {SessionModel} from "./SessionModel";
 import {Field} from "type-graphql";
 
 @Entity('login_tokens')
-export class LoginToken extends BaseModel {
+export class LoginTokenModel extends BaseModel {
   @Field()
   @Generated('uuid')
   uuid!: string;
@@ -12,11 +12,11 @@ export class LoginToken extends BaseModel {
   @Column({ nullable: false })
   token: string;
 
-  @OneToOne(() => Session, {
+  @OneToOne(() => SessionModel, {
     nullable: false,
     eager: true,
     onDelete: 'CASCADE'
   })
   @JoinColumn()
-  public session: Session;
+  public session: SessionModel;
 }

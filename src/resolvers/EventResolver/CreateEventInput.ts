@@ -1,9 +1,9 @@
 import {Field, InputType} from "type-graphql";
-import {IAvailabilityForm} from "event-matcher-shared";
-import {RangeForm} from "../../models/Availability";
+import {IAvailability, ICreateEventInput} from "event-matcher-shared";
+import {RangeForm} from "../../models/AvailabilityModel";
 
 @InputType()
-export default class CreateEventInput {
+export default class CreateEventInput implements ICreateEventInput {
   @Field()
   name: string;
 
@@ -23,5 +23,5 @@ export default class CreateEventInput {
   displayName: string;
 
   @Field(() => [RangeForm])
-  availability: IAvailabilityForm[];
+  availabilities: IAvailability[];
 }

@@ -11,8 +11,8 @@ type DeleteCriteria<T> = string | string[] | number | number[] | Date | Date[] |
 export const DateTimeColumn = {
   type: Date,
   transformer: {
-    to(value: DateTime): Date { return value.toJSDate(); },
-    from(value: Date): DateTime { return DateTime.fromJSDate(value); }
+    to: (value: DateTime): Date => value.toJSDate(),
+    from: (value: Date): DateTime => DateTime.fromJSDate(value)
   }
 };
 

@@ -1,5 +1,5 @@
 import {verify} from "./jwt";
-import {Session} from "../models/Session";
+import {SessionModel} from "../models/SessionModel";
 import {findOne, remove} from "./typeorm";
 import {pick} from "lodash";
 import {DateTime} from "luxon";
@@ -50,13 +50,13 @@ const context = async ({ req }): Promise<Context | SessionContext> => {
 
   if(auth) {
     const jwt = await verify(auth);
-    const session = await findOne(Session, {
+    const session = await findOne(SessionModel, {
       where: pick(jwt, 'uuid', 'key')
     });
 
     if(session) {
       if(DateTime.fromJSDate(session.expiresOn) <= DateTime.now()) {
-        await remove(Session, session);
+        await remove(SessionModel, session);
       } else {
         return {
           ...context,
