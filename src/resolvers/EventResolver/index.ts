@@ -84,4 +84,21 @@ export default class EventResolver {
       .where('m.email = :email', { email: ctx.email })
       .getMany();
   }
+
+  @Authenticated()
+  @Query(() => EventEntity, {
+    description: "Get all events for authenticated user"
+  })
+  async getEvent(
+    @Arg('id') id: number,
+    @Ctx() ctx: AuthenticatedContext
+  ): Promise<EventEntity | undefined> {
+    return this.db.qb(EventEntity, 'e')
+      .innerJoinAndSelect('e.memberships', 'm', 'm.eventId = e.id')
+      .innerJoinAndSelect('m.availabilities', 'a','a.membershipId = m.id')
+      .innerJoinAndSelect('m.permissions', 'p', 'p.membershipId = m.id')
+      .where('m.email = :email', { email: ctx.email })
+      .andWhere('e.id = :id', { id })
+      .getOne();
+  }
 }
