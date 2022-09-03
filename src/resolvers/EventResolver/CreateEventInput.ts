@@ -1,6 +1,7 @@
 import {Field, InputType} from "type-graphql";
 import {IAvailability, ICreateEventInput} from "event-matcher-shared";
-import {RangeForm} from "../../models/AvailabilityModel";
+import {RangeForm} from "../../entities/AvailabilityEntity";
+import {Duration} from "../Duration";
 
 @InputType()
 export default class CreateEventInput implements ICreateEventInput {
@@ -8,13 +9,13 @@ export default class CreateEventInput implements ICreateEventInput {
   name: string;
 
   @Field()
+  img: string;
+
+  @Field()
   description: string;
 
-  @Field()
-  precision: string;
-
-  @Field()
-  factor: number;
+  @Field(() => Duration)
+  duration: Duration;
 
   @Field()
   displayName: string;

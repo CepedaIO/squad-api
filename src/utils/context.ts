@@ -1,11 +1,13 @@
 import {verify} from "./jwt";
-import {SessionModel} from "../models/SessionModel";
+import {SessionEntity} from "../entities/SessionEntity";
 import {findOne, remove} from "./typeorm";
 import {pick} from "lodash";
 import {DateTime} from "luxon";
 import {Container, ContainerInstance} from "typedi";
 import {appConfig} from "../configs/app";
 import {EntityManager, getConnection} from "typeorm";
+import {tokens} from "../tokens";
+import {emailer, testEmailer} from "./emailer";
 
 export interface Context {
   container: ContainerInstance;
@@ -37,8 +39,11 @@ const context = async ({ req }): Promise<Context | SessionContext> => {
   }
 
   context.container.set(EntityManager, getConnection().createEntityManager());
+  context.container.set(tokens.Emailer, emailer);
 
   if(auth === 'test@cepeda.io' && appConfig.isDev) {
+    context.container.set(tokens.Emailer, testEmailer);
+
     return {
       ...context,
       uuid: 'test@cepeda.io',
@@ -50,13 +55,13 @@ const context = async ({ req }): Promise<Context | SessionContext> => {
 
   if(auth) {
     const jwt = await verify(auth);
-    const session = await findOne(SessionModel, {
+    const session = await findOne(SessionEntity, {
       where: pick(jwt, 'uuid', 'key')
     });
 
     if(session) {
       if(DateTime.fromJSDate(session.expiresOn) <= DateTime.now()) {
-        await remove(SessionModel, session);
+        await remove(SessionEntity, session);
       } else {
         return {
           ...context,

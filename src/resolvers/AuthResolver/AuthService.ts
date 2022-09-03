@@ -1,17 +1,18 @@
 import {Context, isAuthenticatedContext, isSessionContext} from "../../utils/context";
 import {Database} from "../../utils/typeorm";
-import {SessionModel} from "../../models/SessionModel";
+import {SessionEntity} from "../../entities/SessionEntity";
 import {randomBytes} from "crypto";
 import {DateTime} from "luxon";
 import {sign} from "../../utils/jwt";
 import {pick} from "lodash";
-import {LoginTokenModel} from "../../models/LoginTokenModel";
+import {LoginTokenEntity} from "../../entities/LoginTokenEntity";
 import {URL} from "url";
 import {appConfig} from "../../configs/app";
 import {join} from "path";
-import {transporter} from "../../utils/emailer";
-import {Service} from "typedi";
-import {SimpleResponse} from "../../models/SimpleResponse";
+import {Inject, Service} from "typedi";
+import {SimpleResponse} from "../SimpleResponse";
+import {tokens} from "../../tokens";
+import {Transporter} from "nodemailer";
 
 export enum SessionExpiration {
   ONE_HOUR,
@@ -21,11 +22,12 @@ export enum SessionExpiration {
 @Service()
 export default class AuthService {
   constructor(
-    private db: Database
+    private db: Database,
+    @Inject(tokens.Emailer) private emailer: Transporter
   ) {}
 
   async getNewToken(email: string): Promise<SimpleResponse> {
-    const session = await this.db.insert(SessionModel, {
+    const session = await this.db.insert(SessionEntity, {
       key: randomBytes(16).toString('hex'),
       email,
       authenticated: true,
@@ -46,10 +48,10 @@ export default class AuthService {
     }
 
     if (isSessionContext(ctx)) {
-      await this.db.remove(SessionModel, pick(ctx, 'uuid', 'key'));
+      await this.db.remove(SessionEntity, pick(ctx, 'uuid', 'key'));
     }
 
-    const session = await this.db.insert(SessionModel, {
+    const session = await this.db.insert(SessionEntity, {
       key: randomBytes(16).toString('hex'),
       email,
       expiresOn: DateTime.now().plus({
@@ -57,7 +59,7 @@ export default class AuthService {
       })
     });
 
-    const login = await this.db.insert(LoginTokenModel, {
+    const login = await this.db.insert(LoginTokenEntity, {
       token: randomBytes(16).toString('hex'),
       session
     })
@@ -67,7 +69,7 @@ export default class AuthService {
     url.pathname = join('login-with', login.uuid, login.token);
     const link = url.toString();
 
-    await transporter.sendMail({
+    await this.emailer.sendMail({
       from: 'no-reply@cepeda.io',
       to: email,
       subject: 'Login request to CepedaIO/Event-Matcher!',
@@ -113,10 +115,10 @@ export default class AuthService {
     }
 
     try {
-      const {session} = await this.db.findAndDelete(LoginTokenModel, { uuid, token });
+      const {session} = await this.db.findAndDelete(LoginTokenEntity, { uuid, token });
       const expiresOn = expires === SessionExpiration.ONE_HOUR ? DateTime.now().plus({ hour:1 }) : DateTime.now().plus({ weeks:2 })
 
-      await this.db.save(SessionModel, {
+      await this.db.save(SessionEntity, {
         ...session,
         authenticated: true,
         expiresOn

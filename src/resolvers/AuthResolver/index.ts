@@ -1,5 +1,5 @@
 import {Arg, Ctx, Int, Mutation, Query, Resolver} from "type-graphql";
-import {SimpleResponse} from "../../models/SimpleResponse";
+import {SimpleResponse} from "../SimpleResponse";
 import {Context, isAuthenticatedContext} from "../../utils/context";
 import {DevOnly} from "../../decorators/devOnly";
 import {Service} from "typedi";

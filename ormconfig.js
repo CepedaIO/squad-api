@@ -7,7 +7,7 @@ module.exports = {
   password: process.env.POSTGRES_PASSWORD || 'password',
   database: process.env.POSTGRES_DB || 'event-matcher',
   entities: [
-    'src/models/**/**.{ts,js}',
+    'src/entities/**/**.{ts,js}',
   ],
   synchronize: true
 };

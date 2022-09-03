@@ -1,5 +1,5 @@
 import {Database} from "../utils/typeorm";
-import {EventModel} from "../models/EventModel";
+import {EventEntity} from "../entities/EventEntity";
 import {Service} from "typedi";
 
 @Service()
@@ -8,7 +8,7 @@ export default class EventService {
     private db: Database
   ) {}
 
-  async upsert(event: EventModel) {
-    return this.db.upsert(EventModel, event);
+  async upsert(event: EventEntity) {
+    return this.db.upsert(EventEntity, event);
   }
 }

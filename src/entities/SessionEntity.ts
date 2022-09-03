@@ -1,9 +1,9 @@
 import {Column, Entity, Generated} from "typeorm";
-import {MutBaseModel} from "./BaseModel";
+import {MutEntity} from "./BaseEntity";
 import {Field} from "type-graphql";
 
 @Entity('sessions')
-export class SessionModel extends MutBaseModel {
+export class SessionEntity extends MutEntity {
   @Field()
   @Column()
   @Generated('uuid')

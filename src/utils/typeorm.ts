@@ -1,8 +1,15 @@
-import {getRepository as _getRepository, EntityTarget, DeepPartial, EntityManager, ObjectLiteral} from "typeorm";
+import {
+  getRepository as _getRepository,
+  EntityTarget,
+  DeepPartial,
+  EntityManager,
+  ObjectLiteral,
+  FindManyOptions
+} from "typeorm";
 import {ObjectID} from "typeorm/driver/mongodb/typings";
 import {FindConditions} from "typeorm/find-options/FindConditions";
 import {FindOneOptions} from "typeorm/find-options/FindOneOptions";
-import {BaseModel} from "../models/BaseModel";
+import {BaseEntity} from "../entities/BaseEntity";
 import {Service} from "typedi";
 import {DateTime} from "luxon";
 
@@ -22,6 +29,10 @@ export class Database {
     private manager: EntityManager
   ) {}
 
+  qb<T extends ObjectLiteral>(entityClass: EntityTarget<T>, alias: string) {
+    return this.manager.createQueryBuilder(entityClass, alias);
+  }
+
   create<T extends ObjectLiteral>(entityClass: EntityTarget<T>, entityLike: DeepPartial<T>): T {
     return getRepository<T>(entityClass).create(entityLike);
   }
@@ -38,12 +49,16 @@ export class Database {
     return remove(entityClass, criteria, this.manager);
   }
 
-  async upsert<T extends BaseModel>(entityClass: EntityTarget<T>, data: DeepPartial<T>) {
+  async upsert<T extends BaseEntity>(entityClass: EntityTarget<T>, data: DeepPartial<T>) {
     return upsert(entityClass, data, this.manager);
   }
 
-  async delsert<T extends BaseModel, D extends DeepPartial<T> = DeepPartial<T>>(entityClass: EntityTarget<T>, criteria: DeleteCriteria<T>, data: D): Promise<T> {
+  async delsert<T extends BaseEntity, D extends DeepPartial<T> = DeepPartial<T>>(entityClass: EntityTarget<T>, criteria: DeleteCriteria<T>, data: D): Promise<T> {
     return delsert(entityClass, criteria, data, this.manager)
+  }
+
+  async findAll<T extends ObjectLiteral, K = FindManyOptions<T>>(entityClass: EntityTarget<T>, options: K): Promise<T[]> {
+    return getRepository(entityClass, this.manager).find(options);
   }
 
   async findOne<T extends ObjectLiteral, K = FindOneOptions<T>>(entityClass: EntityTarget<T>, options: K): Promise<T | undefined> {
@@ -84,7 +99,7 @@ export const remove = async <T extends ObjectLiteral, C extends DeleteCriteria<T
   return result.affected || 0;
 }
 
-export const upsert = async <T extends BaseModel>(entityClass: EntityTarget<T>, data: DeepPartial<T>, manager?: EntityManager) => {
+export const upsert = async <T extends BaseEntity>(entityClass: EntityTarget<T>, data: DeepPartial<T>, manager?: EntityManager) => {
   if(data.id) {
     return save(entityClass, data, manager);
   }
@@ -92,7 +107,7 @@ export const upsert = async <T extends BaseModel>(entityClass: EntityTarget<T>, 
   return insert(entityClass, data, manager);
 }
 
-export const delsert = async <T extends BaseModel, D extends DeepPartial<T> = DeepPartial<T>>(entityClass: EntityTarget<T>, criteria: DeleteCriteria<T>, data: D, manager?: EntityManager): Promise<T> => {
+export const delsert = async <T extends BaseEntity, D extends DeepPartial<T> = DeepPartial<T>>(entityClass: EntityTarget<T>, criteria: DeleteCriteria<T>, data: D, manager?: EntityManager): Promise<T> => {
   await remove(entityClass, criteria, manager);
   return await insert(entityClass, data, manager);
 }

@@ -2,7 +2,7 @@ import {Column, Generated, PrimaryGeneratedColumn} from "typeorm";
 import {Field, ObjectType} from "type-graphql";
 
 @ObjectType()
-export abstract class BaseModel {
+export abstract class BaseEntity {
   @Field()
   @PrimaryGeneratedColumn()
   id!: number;
@@ -13,7 +13,7 @@ export abstract class BaseModel {
 }
 
 @ObjectType()
-export class MutBaseModel extends BaseModel {
+export class MutEntity extends BaseEntity {
   @Field()
   @Column("timestamp", { default: () => "CURRENT_TIMESTAMP", onUpdate: "CURRENT_TIMESTAMP"})
   modifiedOn!: Date;

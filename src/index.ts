@@ -8,12 +8,17 @@ import context, {Context} from "./utils/context";
 import AuthResolver from "./resolvers/AuthResolver";
 import EventResolver from "./resolvers/EventResolver";
 import {ResolverData} from "type-graphql/dist/interfaces/ResolverData";
+import {DateTime} from "luxon";
+import {DateTimeScalar} from "./utils/graphql";
 
 (async () => {
   await createConnection();
   const schema = await buildSchema({
     resolvers: [AuthResolver, EventResolver],
     authChecker,
+    scalarsMap: [
+      {type: DateTime, scalar: DateTimeScalar}
+    ],
     container: ({ context }: ResolverData<Context>) => context.container
   });
 
