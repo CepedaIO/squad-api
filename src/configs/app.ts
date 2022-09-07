@@ -2,7 +2,7 @@ import { env } from 'node:process';
 
 export const appConfig = {
   port: env.SERVER_PORT || 8080,
-  clientPort: env.CLIENT_PORT || 3000,
+  clientPort: env.CLIENT_PORT || 3100,
   origin: '',
   isProd: env.NODE_ENV === 'production',
   isDev: env.NODE_ENV !== 'production',
@@ -14,7 +14,6 @@ export const appConfig = {
   testMailer: {
     host: 'host.docker.internal',
     port: 7777,
-
   }
 }
 

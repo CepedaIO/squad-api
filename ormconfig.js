@@ -1,3 +1,5 @@
+console.log('postgres', process.env.POSTGRES_PORT);
+
 module.exports = {
   type: 'postgres',
   debug: process.env.NODE_ENV !== 'production',
