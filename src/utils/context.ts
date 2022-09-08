@@ -41,14 +41,14 @@ const context = async ({ req }): Promise<Context | SessionContext> => {
   context.container.set(EntityManager, getConnection().createEntityManager());
   context.container.set(tokens.Emailer, emailer);
 
-  if(auth === 'test@cepeda.io' && appConfig.isDev) {
+  if(auth === appConfig.testUser && appConfig.isDev) {
     context.container.set(tokens.Emailer, testEmailer);
 
     return {
       ...context,
-      uuid: 'test@cepeda.io',
-      key: 'test@cepeda.io',
-      email: 'test@cepeda.io',
+      uuid: appConfig.testUser,
+      key: appConfig.testUser,
+      email: appConfig.testUser,
       authenticated: true
     };
   }

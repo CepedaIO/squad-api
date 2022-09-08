@@ -11,6 +11,7 @@ export const appConfig = {
     user: env.EMAILER_USER,
     pass: env.EMAILER_PASS
   },
+  testUser: 'cypress@cepeda.io',
   testMailer: {
     host: 'host.docker.internal',
     port: 7777,

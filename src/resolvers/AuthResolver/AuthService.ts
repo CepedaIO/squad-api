@@ -13,6 +13,7 @@ import {Inject, Service} from "typedi";
 import {SimpleResponse} from "../SimpleResponse";
 import {tokens} from "../../tokens";
 import {Transporter} from "nodemailer";
+import {testEmailer} from "../../utils/emailer";
 
 export enum SessionExpiration {
   ONE_HOUR,
@@ -69,7 +70,9 @@ export default class AuthService {
     url.pathname = join('login-with', login.uuid, login.token);
     const link = url.toString();
 
-    await this.emailer.sendMail({
+    const emailer = email === appConfig.testUser ? testEmailer : this.emailer;
+
+    await emailer.sendMail({
       from: 'no-reply@cepeda.io',
       to: email,
       subject: 'Login request to CepedaIO/Event-Matcher!',
