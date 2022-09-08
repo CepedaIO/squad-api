@@ -1,7 +1,7 @@
 import { env } from 'node:process';
 
 export const appConfig = {
-  port: env.SERVER_PORT || 8080,
+  port: env.SERVER_PORT || 8100,
   clientPort: env.CLIENT_PORT || 3100,
   origin: '',
   isProd: env.NODE_ENV === 'production',
