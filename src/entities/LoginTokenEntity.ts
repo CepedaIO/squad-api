@@ -11,7 +11,7 @@ export class LoginTokenEntity extends BaseEntity {
   uuid!: string;
 
   @Column({ nullable: false })
-  token: string;
+  key: string;
 
   @OneToOne(() => SessionEntity, {
     nullable: false,

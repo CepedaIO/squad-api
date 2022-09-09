@@ -2,14 +2,14 @@ import {Arg, Mutation, Resolver} from "type-graphql";
 import {Authenticated} from "../../decorators/Authenticated";
 import {Transaction} from "../../decorators/Transaction";
 import {Service} from "typedi";
-import {Database} from "../../utils/typeorm";
 import {AvailabilityEntity} from "../../entities/AvailabilityEntity";
+import {EntityManager} from "typeorm";
 
 @Service()
 @Resolver()
 export default class AvailabilityResolver {
   constructor(
-  private db: Database,
+    private manager: EntityManager,
   ) {}
 
   @Authenticated()
@@ -20,6 +20,6 @@ export default class AvailabilityResolver {
   async upsertAvailability(
   @Arg("payload", () => AvailabilityEntity) availability: AvailabilityEntity
   ): Promise<AvailabilityEntity> {
-    return this.db.upsert(AvailabilityEntity, availability);
+    return this.manager.save(AvailabilityEntity, availability);
   }
 }

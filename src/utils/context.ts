@@ -1,13 +1,10 @@
 import {verify} from "./jwt";
 import {SessionEntity} from "../entities/SessionEntity";
-import {findOne, remove} from "./typeorm";
 import {pick} from "lodash";
 import {DateTime} from "luxon";
 import {Container, ContainerInstance} from "typedi";
 import {appConfig} from "../configs/app";
 import {EntityManager, getConnection} from "typeorm";
-import {tokens} from "../tokens";
-import {emailer, testEmailer} from "./emailer";
 
 export interface Context {
   container: ContainerInstance;
@@ -38,36 +35,39 @@ const context = async ({ req }): Promise<Context | SessionContext> => {
     container: Container.of(requestId.toString())
   }
 
-  context.container.set(EntityManager, getConnection().createEntityManager());
-  context.container.set(tokens.Emailer, emailer);
+  const manager = getConnection().createEntityManager();
+  context.container.set(EntityManager, manager);
 
-  if(auth === appConfig.testUser && appConfig.isDev) {
-    context.container.set(tokens.Emailer, testEmailer);
-
+  if(appConfig.testUsers.includes(auth) && appConfig.isDev) {
     return {
       ...context,
-      uuid: appConfig.testUser,
-      key: appConfig.testUser,
-      email: appConfig.testUser,
+      uuid: auth,
+      key: auth,
+      email: auth.toLowerCase(),
       authenticated: true
     };
   }
 
   if(auth) {
-    const jwt = await verify(auth);
-    const session = await findOne(SessionEntity, {
-      where: pick(jwt, 'uuid', 'key')
-    });
+    try {
+      const { uuid, key } = await verify(auth);
 
-    if(session) {
-      if(DateTime.fromJSDate(session.expiresOn) <= DateTime.now()) {
-        await remove(SessionEntity, session);
-      } else {
-        return {
-          ...context,
-          ...pick(session, 'uuid', 'key', 'email', 'authenticated')
+      const session = await manager.findOne(SessionEntity, {
+        where: { uuid, key }
+      });
+
+      if(session) {
+        if(DateTime.fromJSDate(session.expiresOn) <= DateTime.now()) {
+          await manager.remove(SessionEntity, session);
+        } else {
+          return {
+            ...context,
+            ...pick(session, 'uuid', 'key', 'email', 'authenticated')
+          }
         }
       }
+    } catch(e) {
+      throw new Error('Unable to verify auth token')
     }
   }
 

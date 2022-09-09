@@ -1,21 +1,33 @@
 import {Arg, Ctx, Mutation, Query, Resolver} from "type-graphql";
+import {ForbiddenError} from "apollo-server-errors";
 import {EventEntity} from "../../entities/EventEntity";
 import {Authenticated} from "../../decorators/Authenticated";
 import {Transaction} from "../../decorators/Transaction";
 import {Service} from "typedi";
-import {Database} from "../../utils/typeorm";
 import {MembershipEntity} from "../../entities/MembershipEntity";
 import {AvailabilityEntity} from "../../entities/AvailabilityEntity";
 import {AuthenticatedContext} from "../../utils/context";
 import CreateEventInput from "./CreateEventInput";
 import {MembershipPermissionsEntity} from "../../entities/MembershipPermissionEntity";
 import {EventSummary} from "./EventSummary";
+import {SimpleResponse} from "../SimpleResponse";
+import {EntityManager} from "typeorm";
+import {MembershipService} from "../../services/MembershipService";
+import {UserInputError} from "apollo-server";
+import {InviteTokenEntity} from "../../entities/InviteTokenEntity";
+import {DateTime} from "luxon";
+import {appConfig} from "../../configs/app";
+import {HTMLService} from "../../services/HTMLService";
+import {providers} from "../../providers";
+import {randomBytes} from "crypto";
 
 @Service()
 @Resolver()
 export default class EventResolver {
   constructor(
-    private db: Database,
+    private manager: EntityManager,
+    private membershipService: MembershipService,
+    private htmlService: HTMLService
   ) {}
 
   @Authenticated()
@@ -27,17 +39,17 @@ export default class EventResolver {
     @Arg("payload", () => CreateEventInput) payload: CreateEventInput,
     @Ctx() ctx: AuthenticatedContext
   ): Promise<EventEntity> {
-    const event = this.db.create(EventEntity, {
+    const event = this.manager.create(EventEntity, {
       ...payload,
       memberships: [
-        this.db.create(MembershipEntity, {
+        this.manager.create(MembershipEntity, {
           displayName: payload.displayName,
           email: ctx.email,
-          permissions: this.db.create(MembershipPermissionsEntity, {
+          permissions: this.manager.create(MembershipPermissionsEntity, {
             isAdmin: true
           }),
           availabilities: payload.availabilities.map((form) =>
-            this.db.create(AvailabilityEntity, form)
+            this.manager.create(AvailabilityEntity, form)
           )
         })
       ]
@@ -45,7 +57,7 @@ export default class EventResolver {
 
     event.duration = payload.duration;
 
-    return this.db.save(EventEntity, event);
+    return this.manager.save(EventEntity, event);
   }
 
   @Authenticated()
@@ -55,10 +67,10 @@ export default class EventResolver {
   async getEventSummaries(
     @Ctx() ctx: AuthenticatedContext
   ): Promise<EventSummary[]> {
-    const events = await this.db.qb(EventEntity, 'e')
-      .innerJoin('e.memberships', 'm', 'm.eventId = e.id AND m.email = :email', { email: ctx.email })
-      .innerJoinAndSelect('e.memberships', 'admin', 'admin.eventId = e.id')
-      .leftJoin('admin.permissions', 'p', 'p.membershipId = admin.id')
+    const events = await this.manager.createQueryBuilder(EventEntity, 'e')
+      .innerJoin('e.memberships', 'm', 'm.email = :email', { email: ctx.email })
+      .innerJoinAndSelect('e.memberships', 'admin')
+      .leftJoin('admin.permissions', 'p')
       .getMany();
 
     return events.map((event) => Object.assign(new EventSummary(), event, {
@@ -77,10 +89,10 @@ export default class EventResolver {
     /**
      * TODO: Everyone needs permissions, no left join here
      */
-    return this.db.qb(EventEntity, 'e')
-      .innerJoinAndSelect('e.memberships', 'm', 'm.eventId = e.id')
-      .innerJoinAndSelect('m.availabilities', 'a','a.membershipId = m.id')
-      .innerJoinAndSelect('m.permissions', 'p', 'p.membershipId = m.id')
+    return this.manager.createQueryBuilder(EventEntity, 'e')
+      .innerJoinAndSelect('e.memberships', 'm')
+      .innerJoinAndSelect('m.availabilities', 'a')
+      .innerJoinAndSelect('m.permissions', 'p')
       .where('m.email = :email', { email: ctx.email })
       .getMany();
   }
@@ -93,12 +105,53 @@ export default class EventResolver {
     @Arg('id') id: number,
     @Ctx() ctx: AuthenticatedContext
   ): Promise<EventEntity | undefined> {
-    return this.db.qb(EventEntity, 'e')
-      .innerJoinAndSelect('e.memberships', 'm', 'm.eventId = e.id')
-      .innerJoinAndSelect('m.availabilities', 'a','a.membershipId = m.id')
-      .innerJoinAndSelect('m.permissions', 'p', 'p.membershipId = m.id')
+    return this.manager.createQueryBuilder(EventEntity, 'e')
+      .innerJoinAndSelect('e.memberships', 'm')
+      .innerJoinAndSelect('m.availabilities', 'a')
+      .innerJoinAndSelect('m.permissions', 'p')
       .where('m.email = :email', { email: ctx.email })
       .andWhere('e.id = :id', { id })
       .getOne();
+  }
+
+  @Authenticated()
+  @Mutation(() => SimpleResponse, {
+    description: 'Invite a user to this event'
+  })
+  async inviteUser(
+    @Arg('id') id: number,
+    @Arg('email') email: string,
+    @Ctx() ctx: AuthenticatedContext
+  ): Promise<SimpleResponse> {
+    const [fromIsMemberOfEvent, toIsMemberEvent] = await this.membershipService.isMemberOf(id, [ctx.email, email]);
+
+    if(!fromIsMemberOfEvent) {
+      throw new ForbiddenError('You are not a member of this event');
+    }
+
+    if(toIsMemberEvent) {
+      throw new UserInputError(`${email} is already a member of this event`);
+    }
+
+    const event = await this.manager.findOneOrFail(EventEntity, { id });
+    const invite = await this.manager.save(InviteTokenEntity, {
+      email,
+      event,
+      key: randomBytes(16).toString('hex'),
+      expiresOn: DateTime.now().plus({days: 3})
+    });
+
+    const emailer = providers.emailerFor(email);
+    await emailer.sendMail({
+      from: appConfig.fromNoReply,
+      to: email,
+      subject: 'You have been invited!',
+      html: this.htmlService.invite(invite)
+    })
+
+    return {
+      success: true,
+      result: JSON.stringify({ id, email })
+    };
   }
 }

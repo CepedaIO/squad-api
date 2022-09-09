@@ -1,4 +1,4 @@
-console.log('postgres', process.env.POSTGRES_PORT);
+const SnakeNamingStrategy = require("typeorm-naming-strategies").SnakeNamingStrategy;
 
 module.exports = {
   type: 'postgres',
@@ -11,5 +11,6 @@ module.exports = {
   entities: [
     'src/entities/**/**.{ts,js}',
   ],
-  synchronize: true
+  synchronize: true,
+  namingStrategy: new SnakeNamingStrategy()
 };

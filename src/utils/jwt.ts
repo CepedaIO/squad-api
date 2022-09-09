@@ -3,6 +3,7 @@ import {appConfig} from "../configs/app";
 
 export type JWTToken = string;
 export interface JWT {
+  uuid: string;
   key: string;
 }
 

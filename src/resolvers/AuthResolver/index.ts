@@ -27,11 +27,11 @@ export default class AuthResolver {
   })
   async useLoginToken(
     @Arg("uuid") uuid: string,
-    @Arg("token") token: string,
+    @Arg("key") key: string,
     @Arg("expires", () => Int) expires: SessionExpiration,
     @Ctx() ctx: Context
   ): Promise<SimpleResponse> {
-    return this.authService.useLoginToken(uuid, token, expires, ctx)
+    return this.authService.useLoginToken(uuid, key, expires, ctx)
   }
 
   @DevOnly()
@@ -39,7 +39,7 @@ export default class AuthResolver {
   async getNewToken(
     @Arg('email') email: string
   ): Promise<SimpleResponse> {
-    return this.authService.getNewToken(email);
+    return this.authService.getNewToken(email.toLowerCase());
   }
 
   @Transaction()
@@ -50,6 +50,6 @@ export default class AuthResolver {
     @Arg("email") email: string,
     @Ctx() ctx: Context
   ): Promise<SimpleResponse> {
-    return this.authService.login(email, ctx);
+    return this.authService.login(email.toLowerCase(), ctx);
   }
 }

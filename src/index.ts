@@ -11,6 +11,7 @@ import {ResolverData} from "type-graphql/dist/interfaces/ResolverData";
 import {DateTime} from "luxon";
 import {DateTimeScalar} from "./utils/graphql";
 
+
 (async () => {
   await createConnection();
   const schema = await buildSchema({

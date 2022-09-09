@@ -1,19 +1,16 @@
 import {Context, isAuthenticatedContext, isSessionContext} from "../../utils/context";
-import {Database} from "../../utils/typeorm";
 import {SessionEntity} from "../../entities/SessionEntity";
 import {randomBytes} from "crypto";
 import {DateTime} from "luxon";
 import {sign} from "../../utils/jwt";
 import {pick} from "lodash";
 import {LoginTokenEntity} from "../../entities/LoginTokenEntity";
-import {URL} from "url";
 import {appConfig} from "../../configs/app";
-import {join} from "path";
-import {Inject, Service} from "typedi";
+import {Service} from "typedi";
 import {SimpleResponse} from "../SimpleResponse";
-import {tokens} from "../../tokens";
-import {Transporter} from "nodemailer";
-import {testEmailer} from "../../utils/emailer";
+import {EntityManager} from "typeorm";
+import {HTMLService} from "../../services/HTMLService";
+import {providers} from "../../providers";
 
 export enum SessionExpiration {
   ONE_HOUR,
@@ -23,12 +20,12 @@ export enum SessionExpiration {
 @Service()
 export default class AuthService {
   constructor(
-    private db: Database,
-    @Inject(tokens.Emailer) private emailer: Transporter
+    private manager: EntityManager,
+    private htmlService: HTMLService
   ) {}
 
   async getNewToken(email: string): Promise<SimpleResponse> {
-    const session = await this.db.insert(SessionEntity, {
+    const session = await this.manager.save(SessionEntity, {
       key: randomBytes(16).toString('hex'),
       email,
       authenticated: true,
@@ -49,10 +46,10 @@ export default class AuthService {
     }
 
     if (isSessionContext(ctx)) {
-      await this.db.remove(SessionEntity, pick(ctx, 'uuid', 'key'));
+      await this.manager.remove(SessionEntity, pick(ctx, 'uuid', 'key'));
     }
 
-    const session = await this.db.insert(SessionEntity, {
+    const session = await this.manager.save(SessionEntity, {
       key: randomBytes(16).toString('hex'),
       email,
       expiresOn: DateTime.now().plus({
@@ -60,68 +57,35 @@ export default class AuthService {
       })
     });
 
-    const login = await this.db.insert(LoginTokenEntity, {
-      token: randomBytes(16).toString('hex'),
+    const login = await this.manager.save(LoginTokenEntity, {
+      key: randomBytes(16).toString('hex'),
       session
     })
 
     const token = await sign(pick(session, 'uuid', 'key'));
-    const url = new URL(appConfig.origin)
-    url.pathname = join('login-with', login.uuid, login.token);
-    const link = url.toString();
-
-    const emailer = email === appConfig.testUser ? testEmailer : this.emailer;
+    const emailer = providers.emailerFor(email);
 
     await emailer.sendMail({
-      from: 'no-reply@cepeda.io',
+      from: appConfig.fromNoReply,
       to: email,
       subject: 'Login request to CepedaIO/Event-Matcher!',
-      html: `
-<html>
-  <body>
-    <h1>Thank you for joining!</h1>
-    
-    <p>
-      That's about it! If you have any questions or run into any bugs, reach out to <a style="color:#3b83f6;text-decoration:underline;cursor:pointer" href = "mailto:support@cepeda.io">support@cepeda.io</a>
-    </p>
-    <p>
-      How would you like to log in?
-    </p>
-    <ul style="list-style: none">
-      <li style="margin-bottom:10px">
-        <a href="${link}?expires=0">
-          <button style="background-color:#3b83f6;color:white;width:165px;height:40px;cursor:pointer;border:0;">Expire after 1 hour</button>
-        </a>
-      </li>
-      <li style="margin-bottom:10px">
-        <a href="${link}?expires=1">
-          <button style="background-color:#3b83f6;color:white;width:165px;height:40px;cursor:pointer;border:0;">Expire after 2 weeks</button>
-        </a>
-      </li>
-      <li style="margin-bottom:10px">
-        <a href="${link}?reject=true">
-          <button style="background-color:#fb7186;color:white;width:165px;height:40px;cursor:pointer;border:0;">Don't Login</button>
-        </a>
-      </li>
-    </ul>
-  </body>
-</html>
-    `
+      html: this.htmlService.login(login)
     });
 
     return {success: true, result: token};
   }
 
-  async useLoginToken(uuid:string, token:string, expires:SessionExpiration, ctx: Context) {
+  async useLoginToken(uuid:string, key:string, expires:SessionExpiration, ctx: Context) {
     if(isAuthenticatedContext(ctx)) {
       return { success: true, result: 'Already logged in, silly goose' };
     }
 
     try {
-      const {session} = await this.db.findAndDelete(LoginTokenEntity, { uuid, token });
+      const {session} = await this.manager.findOneOrFail(LoginTokenEntity, { uuid, key });
+      await this.manager.delete(LoginTokenEntity, { uuid, key });
       const expiresOn = expires === SessionExpiration.ONE_HOUR ? DateTime.now().plus({ hour:1 }) : DateTime.now().plus({ weeks:2 })
 
-      await this.db.save(SessionEntity, {
+      await this.manager.save(SessionEntity, {
         ...session,
         authenticated: true,
         expiresOn

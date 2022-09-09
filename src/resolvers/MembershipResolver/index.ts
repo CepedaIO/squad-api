@@ -2,14 +2,14 @@ import {Arg, Mutation, Resolver} from "type-graphql";
 import {Authenticated} from "../../decorators/Authenticated";
 import {Transaction} from "../../decorators/Transaction";
 import {Service} from "typedi";
-import {Database} from "../../utils/typeorm";
 import {MembershipEntity} from "../../entities/MembershipEntity";
+import {EntityManager} from "typeorm";
 
 @Service()
 @Resolver()
 export default class MembershipResolver {
   constructor(
-    private db: Database,
+    private manager: EntityManager,
   ) {}
 
   @Authenticated()
@@ -20,6 +20,6 @@ export default class MembershipResolver {
   async upsertMembership(
   @Arg("payload", () => MembershipEntity) membership: MembershipEntity
   ): Promise<MembershipEntity> {
-    return this.db.upsert(MembershipEntity, membership);
+    return this.manager.save(MembershipEntity, membership);
   }
 }

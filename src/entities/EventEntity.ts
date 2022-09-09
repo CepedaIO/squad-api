@@ -4,6 +4,7 @@ import {MutEntity} from "./BaseEntity";
 import {MembershipEntity} from "./MembershipEntity";
 import {IEventEntity} from "event-matcher-shared";
 import {Duration} from "../resolvers/Duration";
+import {InviteTokenEntity} from "./InviteTokenEntity";
 
 @ObjectType()
 @Entity('events')
@@ -47,4 +48,8 @@ export class EventEntity extends MutEntity implements IEventEntity {
     cascade: ['insert']
   })
   memberships: MembershipEntity[];
+
+  @Field(() => [InviteTokenEntity])
+  @OneToMany(() => InviteTokenEntity, invite => invite.event)
+  invites: InviteTokenEntity;
 }

@@ -7,11 +7,16 @@ export const appConfig = {
   isProd: env.NODE_ENV === 'production',
   isDev: env.NODE_ENV !== 'production',
   jwtSecret: 'w7%/L$0UE~9ukMWwA[FM%+bt:5]tKV',
+  fromNoReply: 'no-reply@cepeda.io',
+  testUsers: [
+    'cypress@cepeda.io',
+    'apollo@cepeda.io',
+    'test@cepeda.io'
+  ],
   emailer: {
     user: env.EMAILER_USER,
     pass: env.EMAILER_PASS
   },
-  testUser: 'cypress@cepeda.io',
   testMailer: {
     host: 'host.docker.internal',
     port: 7777,
