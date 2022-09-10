@@ -5,7 +5,6 @@ import {Field} from "type-graphql";
 
 @Entity('login_tokens')
 export class LoginTokenEntity extends BaseEntity {
-  @Field()
   @Column()
   @Generated('uuid')
   uuid!: string;

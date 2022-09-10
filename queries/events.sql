@@ -7,4 +7,6 @@ INNER JOIN memberships m on mp.membership_id = m.id;
 SELECT * FROM availabilities;
 
 SELECT * FROM events;
-DELETE FROM events WHERE id IN (SELECT event_id FROM memberships m WHERE m.email IN ('test@cypress.io'))
+DELETE FROM events WHERE id IN (SELECT event_id FROM memberships m WHERE m.email IN ('test@cypress.io'));
+
+SELECT event_id FROM "memberships" "m" WHERE "m"."email" IN ('cypress@cepeda.io');

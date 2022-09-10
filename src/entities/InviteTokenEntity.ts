@@ -8,20 +8,22 @@ import {DateTimeColumn} from "../utils/typeorm";
 @ObjectType()
 @Entity('invite_tokens')
 export class InviteTokenEntity extends BaseEntity {
-  @Field()
   @Column({ nullable: false})
   @Generated('uuid')
   uuid: string;
-
+  
   @Column({ nullable: false })
   key: string;
-
+  
+  @Field()
   @Column(DateTimeColumn)
   expiresOn: DateTime;
   
+  @Field()
   @Column({ nullable: false })
   from: string;
   
+  @Field()
   @Column({ nullable: false})
   email: string;
 

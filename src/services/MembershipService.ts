@@ -8,6 +8,15 @@ export class MembershipService {
     private manager: EntityManager
   ) {}
   
+  async eventIdsFor(emails: string[]): Promise<number[]> {
+    const memberships = await this.manager.find(MembershipEntity, {
+      select: ['eventId'],
+      where: { email: In(emails) }
+    });
+
+    return memberships.map((membership) => membership.eventId);
+  }
+  
   async membershipsFor(eventId: number, emails: string[]): Promise<Array<MembershipEntity | undefined>> {
     const members = await this.manager.find(MembershipEntity, {
       where: {

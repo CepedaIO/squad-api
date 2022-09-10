@@ -44,10 +44,18 @@ export class EventEntity extends MutEntity implements IEventEntity {
   }
 
   @Field(() => [MembershipEntity])
-  @OneToMany(() => MembershipEntity, membership => membership.event, { cascade: true })
+  @OneToMany(
+    () => MembershipEntity,
+    membership => membership.event,
+    { cascade: true, eager: true }
+  )
   memberships: MembershipEntity[];
 
   @Field(() => [InviteTokenEntity])
-  @OneToMany(() => InviteTokenEntity, invite => invite.event, { cascade: true })
+  @OneToMany(
+    () => InviteTokenEntity,
+    invite => invite.event,
+    { cascade: true, eager: true }
+  )
   invites: InviteTokenEntity[];
 }

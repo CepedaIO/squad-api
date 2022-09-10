@@ -17,14 +17,29 @@ export class MembershipEntity extends MutEntity implements IMembershipEntity {
   @Column()
   displayName: string;
 
-  @ManyToOne(() => EventEntity, event => event.memberships, { nullable: false, onDelete:'CASCADE' })
+  @Column()
+  eventId: number;
+
+  @ManyToOne(
+    () => EventEntity,
+    event => event.memberships,
+    { nullable: false, onDelete:'CASCADE' }
+  )
   event: EventEntity;
 
   @Field(() => MembershipPermissionsEntity)
-  @OneToOne(() => MembershipPermissionsEntity, permissions => permissions.membership, { cascade: true })
+  @OneToOne(
+    () => MembershipPermissionsEntity,
+    permissions => permissions.membership,
+    { cascade: true, eager: true }
+  )
   permissions: MembershipPermissionsEntity;
 
   @Field(() => [AvailabilityEntity])
-  @OneToMany(() => AvailabilityEntity, availability => availability.membership, { cascade: true })
+  @OneToMany(
+    () => AvailabilityEntity,
+    availability => availability.membership,
+    { cascade: true, eager: true }
+  )
   availabilities: AvailabilityEntity[];
 }

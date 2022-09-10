@@ -11,4 +11,8 @@ export default class EventService {
   async upsert(event: EventEntity) {
     return this.manager.save(EventEntity, event);
   }
+  
+  async eventsWithMembers(emails: string[]) {
+    return this.manager.createQueryBuilder(EventEntity, 'e')
+  }
 }

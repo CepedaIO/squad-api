@@ -20,6 +20,7 @@ import {providers} from "../../providers";
 import {createKey} from "../../utils/bag";
 import {AcceptInviteInput, CreateEventInput, InviteMemberInput} from "./inputs";
 import {EventSummary} from "./outputs";
+import {pick} from "lodash";
 
 @Service()
 @Resolver()
@@ -112,12 +113,8 @@ export default class EventResolver {
   async getEvents(
     @Ctx() ctx: AuthenticatedContext
   ): Promise<EventEntity[]> {
-    return this.manager.createQueryBuilder(EventEntity, 'e')
-      .innerJoinAndSelect('e.memberships', 'm')
-      .innerJoinAndSelect('m.availabilities', 'a')
-      .innerJoinAndSelect('m.permissions', 'p')
-      .where('m.email = :email', { email: ctx.email })
-      .getMany();
+    const eventIds = await this.membershipService.eventIdsFor([ ctx.email ]);
+    return this.manager.findByIds(EventEntity, eventIds);
   }
 
   @Authenticated()
@@ -128,24 +125,7 @@ export default class EventResolver {
     @Arg('id') id: number,
     @Ctx() ctx: AuthenticatedContext
   ): Promise<EventEntity | undefined> {
-    const memberships = await this.manager.find(MembershipEntity, {
-      relations: ['permissions', 'availabilities'],
-      where: {
-        event: { id }
-      }
-    });
-    
-    const event = await this.manager.createQueryBuilder(EventEntity, 'e')
-      .innerJoinAndMapMany('e.memberships', MembershipEntity, 'm', 'm.event_id = e.id')
-      .leftJoinAndSelect('e.invites', 'i')
-      .innerJoinAndSelect('m.availabilities', 'a')
-      .innerJoinAndSelect('m.permissions', 'p')
-      .andWhere('e.id = :id', { id })
-      .getOneOrFail();
-    
-    event.memberships = memberships;
-    
-    return event;
+    return this.manager.findOne(EventEntity, { id });
   }
   
   @Mutation(() => SimpleResponse, {
@@ -159,17 +139,21 @@ export default class EventResolver {
 
     const invite = await this.manager.findOne(InviteTokenEntity, {
       uuid, key, event: { id: eventId }
+    }, {
+      relations: ['event']
     });
 
     if(!invite) {
       throw new AuthenticationError('You cannot invite anyone to that event');
     }
-
+    
+    await this.manager.delete(InviteTokenEntity, pick(invite, 'id'));
     await this.manager.save(MembershipEntity, {
       email: invite.email,
       displayName,
+      event: invite.event,
       availabilities: availabilities.map((form) => this.manager.create(AvailabilityEntity, form)),
-      event: invite.event
+      permissions: this.manager.create(MembershipPermissionsEntity, { isAdmin: false })
     });
 
     return {
