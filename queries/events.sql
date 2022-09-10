@@ -1,0 +1,10 @@
+SELECT * FROM memberships;
+
+SELECT m.display_name, m.event_id, mp.*
+FROM membership_permissions mp
+INNER JOIN memberships m on mp.membership_id = m.id;
+
+SELECT * FROM availabilities;
+
+SELECT * FROM events;
+DELETE FROM events WHERE id IN (SELECT event_id FROM memberships m WHERE m.email IN ('test@cypress.io'))

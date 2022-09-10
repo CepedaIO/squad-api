@@ -1,4 +1,4 @@
-import {Column, Entity, ManyToOne, OneToMany, OneToOne} from "typeorm";
+import {Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne} from "typeorm";
 import {Field, ObjectType} from "type-graphql";
 import {MutEntity} from "./BaseEntity";
 import {AvailabilityEntity} from "./AvailabilityEntity";
@@ -17,18 +17,14 @@ export class MembershipEntity extends MutEntity implements IMembershipEntity {
   @Column()
   displayName: string;
 
-  @ManyToOne(() => EventEntity, event => event.memberships)
+  @ManyToOne(() => EventEntity, event => event.memberships, { nullable: false, onDelete:'CASCADE' })
   event: EventEntity;
 
   @Field(() => MembershipPermissionsEntity)
-  @OneToOne(() => MembershipPermissionsEntity, permissions => permissions.membership, {
-    cascade: ['insert']
-  })
+  @OneToOne(() => MembershipPermissionsEntity, permissions => permissions.membership, { cascade: true })
   permissions: MembershipPermissionsEntity;
 
   @Field(() => [AvailabilityEntity])
-  @OneToMany(() => AvailabilityEntity, availability => availability.membership, {
-    cascade: ['insert']
-  })
+  @OneToMany(() => AvailabilityEntity, availability => availability.membership, { cascade: true })
   availabilities: AvailabilityEntity[];
 }

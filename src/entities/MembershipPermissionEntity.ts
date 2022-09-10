@@ -12,7 +12,7 @@ export class MembershipPermissionsEntity extends MutEntity implements IMembershi
   @Field()
   membershipId: number;
 
-  @OneToOne(() => MembershipEntity)
+  @OneToOne(() => MembershipEntity, { nullable: false, onDelete:'CASCADE' })
   @JoinColumn()
   membership: MembershipEntity;
 

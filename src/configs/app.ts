@@ -10,6 +10,7 @@ export const appConfig = {
   fromNoReply: 'no-reply@cepeda.io',
   testUsers: [
     'cypress@cepeda.io',
+    'cypress-invited@cepeda.io',
     'apollo@cepeda.io',
     'test@cepeda.io'
   ],

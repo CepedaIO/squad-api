@@ -7,19 +7,19 @@ import {Duration} from "../Duration";
 export class EventSummary implements IEventSummary {
   @Field()
   public id: number;
-
+  
   @Field()
   public name: string;
-
+  
   @Field()
   public img: string;
-
+  
   @Field()
   public duration: Duration;
-
+  
   @Field()
   public memberCount: number;
-
+  
   @Field(() => MembershipEntity)
   public admin: MembershipEntity;
 }

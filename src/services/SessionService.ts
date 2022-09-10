@@ -40,13 +40,14 @@ export default class SessionService {
     });
   }
 
-  async createShortSession(email: string): Promise<SessionEntity> {
+  async createShortSession(email: string, authenticated: boolean = false): Promise<SessionEntity> {
     return this.manager.save(SessionEntity, {
       key: createKey(),
       email,
       expiresOn: DateTime.now().plus({
         minutes: 10
-      })
+      }),
+      authenticated
     })
   }
 }

@@ -7,16 +7,15 @@ export class MembershipService {
   constructor(
     private manager: EntityManager
   ) {}
-
-  async isMemberOf(eventId: number, emails: string[]): Promise<boolean[]> {
+  
+  async membershipsFor(eventId: number, emails: string[]): Promise<Array<MembershipEntity | undefined>> {
     const members = await this.manager.find(MembershipEntity, {
-      select: ['email'],
       where: {
         event: { id: eventId },
         email: In(emails)
       }
     });
 
-    return emails.map((email) => !!members.find((member) => member.email === email));
+    return emails.map((email) => members.find((member) => member.email === email));
   }
 }

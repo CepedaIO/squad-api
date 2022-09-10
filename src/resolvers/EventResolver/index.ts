@@ -1,4 +1,4 @@
-import {Arg, Ctx, Mutation, Query, Resolver, UnauthorizedError} from "type-graphql";
+import {Arg, Ctx, Mutation, Query, Resolver} from "type-graphql";
 import {ForbiddenError} from "apollo-server-errors";
 import {EventEntity} from "../../entities/EventEntity";
 import {Authenticated} from "../../decorators/Authenticated";
@@ -6,22 +6,20 @@ import {Transaction} from "../../decorators/Transaction";
 import {Service} from "typedi";
 import {MembershipEntity} from "../../entities/MembershipEntity";
 import {AvailabilityEntity} from "../../entities/AvailabilityEntity";
-import {AuthenticatedContext, Context, isAuthenticatedContext} from "../../utils/context";
-import CreateEventInput from "./CreateEventInput";
+import {AuthenticatedContext, Context} from "../../utils/context";
 import {MembershipPermissionsEntity} from "../../entities/MembershipPermissionEntity";
-import {EventSummary} from "./EventSummary";
 import {SimpleResponse} from "../SimpleResponse";
 import {EntityManager} from "typeorm";
 import {MembershipService} from "../../services/MembershipService";
-import {UserInputError} from "apollo-server";
+import {UserInputError, AuthenticationError} from "apollo-server";
 import {InviteTokenEntity} from "../../entities/InviteTokenEntity";
 import {DateTime} from "luxon";
 import {appConfig} from "../../configs/app";
 import {HTMLService} from "../../services/HTMLService";
 import {providers} from "../../providers";
-import AcceptInviteInput from "./AcceptInviteInput";
 import {createKey} from "../../utils/bag";
-import SessionService from "../../services/SessionService";
+import {AcceptInviteInput, CreateEventInput, InviteMemberInput} from "./inputs";
+import {EventSummary} from "./outputs";
 
 @Service()
 @Resolver()
@@ -29,8 +27,7 @@ export default class EventResolver {
   constructor(
     private manager: EntityManager,
     private membershipService: MembershipService,
-    private htmlService: HTMLService,
-    private sessionService: SessionService
+    private htmlService: HTMLService
   ) {}
 
   @Authenticated()
@@ -65,7 +62,7 @@ export default class EventResolver {
 
   @Authenticated()
   @Query(() => [EventSummary], {
-    description: "Get the summaries of all actives events for user"
+    description: "Get the summaries of all active events for user"
   })
   async getEventSummaries(
     @Ctx() ctx: AuthenticatedContext
@@ -73,13 +70,39 @@ export default class EventResolver {
     const events = await this.manager.createQueryBuilder(EventEntity, 'e')
       .innerJoin('e.memberships', 'm', 'm.email = :email', { email: ctx.email })
       .innerJoinAndSelect('e.memberships', 'admin')
-      .leftJoin('admin.permissions', 'p')
+      .innerJoinAndSelect('admin.permissions', 'p')
       .getMany();
 
     return events.map((event) => Object.assign(new EventSummary(), event, {
       admin: event.memberships[0],
+      memberCount: event.memberships.length,
       duration: event.duration
     }));
+  }
+  
+  @Authenticated()
+  @Query(() => EventSummary, {
+    description: "Get the summary of a specific event"
+  })
+  async getEventSummaryFor(
+    @Arg('id') id: number,
+    @Ctx() ctx: AuthenticatedContext
+  ): Promise<EventSummary> {
+    const event = await this.manager.createQueryBuilder(EventEntity, 'e')
+      .innerJoin('e.memberships', 'm', 'm.email = :email', { email: ctx.email })
+      .innerJoinAndSelect('e.memberships', 'admin')
+      .leftJoin('admin.permissions', 'p')
+      .where('e.id = :id', { id })
+      .getOne();
+    
+    if(!event) {
+      throw new AuthenticationError('You cannot get the summary of this event');
+    }
+    
+    return Object.assign(new EventSummary(), event, {
+      admin: event.memberships[0],
+      duration: event.duration
+    })
   }
 
   @Authenticated()
@@ -105,15 +128,26 @@ export default class EventResolver {
     @Arg('id') id: number,
     @Ctx() ctx: AuthenticatedContext
   ): Promise<EventEntity | undefined> {
-    return this.manager.createQueryBuilder(EventEntity, 'e')
-      .innerJoinAndSelect('e.memberships', 'm')
+    const memberships = await this.manager.find(MembershipEntity, {
+      relations: ['permissions', 'availabilities'],
+      where: {
+        event: { id }
+      }
+    });
+    
+    const event = await this.manager.createQueryBuilder(EventEntity, 'e')
+      .innerJoinAndMapMany('e.memberships', MembershipEntity, 'm', 'm.event_id = e.id')
+      .leftJoinAndSelect('e.invites', 'i')
       .innerJoinAndSelect('m.availabilities', 'a')
       .innerJoinAndSelect('m.permissions', 'p')
-      .where('m.email = :email', { email: ctx.email })
       .andWhere('e.id = :id', { id })
-      .getOne();
+      .getOneOrFail();
+    
+    event.memberships = memberships;
+    
+    return event;
   }
-
+  
   @Mutation(() => SimpleResponse, {
     description: 'Adds user to event and returns authenticated session'
   })
@@ -121,57 +155,59 @@ export default class EventResolver {
     @Arg('payload') payload: AcceptInviteInput,
     @Ctx() ctx: Context
   ): Promise<SimpleResponse> {
-    const { uuid, key, eventId, displayName, availabilities, expires } = payload;
+    const { uuid, key, eventId, displayName, availabilities } = payload;
 
     const invite = await this.manager.findOne(InviteTokenEntity, {
       uuid, key, event: { id: eventId }
     });
 
     if(!invite) {
-      throw new UnauthorizedError();
+      throw new AuthenticationError('You cannot invite anyone to that event');
     }
 
     await this.manager.save(MembershipEntity, {
       email: invite.email,
       displayName,
-      availabilities: availabilities.map((form) => this.manager.create(AvailabilityEntity, form))
-    });
-
-    if(isAuthenticatedContext(ctx)) {
-      return {
-        success: true,
-        result: await this.sessionService.toJWT(ctx)
-      }
-    }
-
-    const session = await this.sessionService.createSession({
-      email: invite.email,
-      expires,
-      authenticated: true
+      availabilities: availabilities.map((form) => this.manager.create(AvailabilityEntity, form)),
+      event: invite.event
     });
 
     return {
       success: true,
-      result: await this.sessionService.toJWT(session)
+      result: `${invite.email} has joined the event!`
     };
   }
 
   @Authenticated()
   @Mutation(() => SimpleResponse, {
-    description: 'Invite a user to this event'
+    description: 'Invite a member to this event'
   })
-  async inviteUser(
-    @Arg('id') id: number,
-    @Arg('email') email: string,
+  async inviteMember(
+    @Arg('payload') payload: InviteMemberInput,
     @Ctx() ctx: AuthenticatedContext
   ): Promise<SimpleResponse> {
-    const [fromIsMemberOfEvent, toIsMemberEvent] = await this.membershipService.isMemberOf(id, [ctx.email, email]);
+    const { id, email, message } = payload;
+    
+    const pending = await this.manager.findOne(InviteTokenEntity, {
+      where: {
+        email,
+        event: { id }
+      }
+    });
+    
+    if(pending && !pending.expired) {
+      throw new UserInputError(`${email} already has a pending invite`)
+    } else if(pending) {
+      await this.manager.delete(InviteTokenEntity, pending);
+    }
 
-    if(!fromIsMemberOfEvent) {
+    const [fromMembership, toMembership] = await this.membershipService.membershipsFor(id, [ctx.email, email]);
+
+    if(!fromMembership) {
       throw new ForbiddenError('You are not a member of this event');
     }
 
-    if(toIsMemberEvent) {
+    if(toMembership) {
       throw new UserInputError(`${email} is already a member of this event`);
     }
 
@@ -179,6 +215,7 @@ export default class EventResolver {
     const invite = await this.manager.save(InviteTokenEntity, {
       email,
       event,
+      from: ctx.email,
       key: createKey(),
       expiresOn: DateTime.now().plus({days: 3})
     });
@@ -188,12 +225,12 @@ export default class EventResolver {
       from: appConfig.fromNoReply,
       to: email,
       subject: 'You have been invited!',
-      html: this.htmlService.invite(invite)
+      html: this.htmlService.invite(invite, fromMembership.displayName, message)
     })
 
     return {
       success: true,
-      result: JSON.stringify({ id, email })
+      result: `Invite sent to ${email}`
     };
   }
 }

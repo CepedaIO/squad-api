@@ -12,6 +12,7 @@ export class HTMLService {
   private red = '#fb7186'
   private acceptBtn = `background-color:${this.blue};color:white;width:165px;height:40px;cursor:pointer;border:0;`;
   private rejectBtn = `background-color:${this.red};color:white;width:165px;height:40px;cursor:pointer;border:0;`;
+  private horizontalItem = 'margin-bottom:10px;display:inline-block';
 
   login(login: LoginTokenEntity) {
     const url = new URL(appConfig.origin)
@@ -30,17 +31,17 @@ export class HTMLService {
       How would you like to log in?
     </p>
     <ul style="list-style: none">
-      <li style="margin-bottom:10px">
+      <li style="${this.horizontalItem}">
         <a href="${link}?expires=0">
           <button style="${this.acceptBtn}">Expire after 1 hour</button>
         </a>
       </li>
-      <li style="margin-bottom:10px">
+      <li style="${this.horizontalItem}">
         <a href="${link}?expires=1">
           <button style="${this.acceptBtn}">Expire after 2 weeks</button>
         </a>
       </li>
-      <li style="margin-bottom:10px">
+      <li style="${this.horizontalItem}">
         <a href="${link}?reject=true">
           <button style="${this.rejectBtn}">Don't Login</button>
         </a>
@@ -50,16 +51,19 @@ export class HTMLService {
 </html>`
   }
 
-  invite(invite: InviteTokenEntity) {
+  invite(invite: InviteTokenEntity, from:string, message: string) {
     const url = new URL(appConfig.origin)
     const event = invite.event;
-    url.pathname = join('event', event.id.toString(), 'join', invite.uuid, invite.key);
+    url.pathname = join('event', event.id.toString(), 'invite', invite.uuid, invite.key);
     const link = url.toString();
 
     return `
 <html>
   <body>
     <h1>${event.name}</h1>
+    
+    <h4>From ${from}:</h4>
+    <p>${message}</p>
     
     <h4>Description:</h4>
     <p>${event.description}</p>
@@ -69,12 +73,12 @@ export class HTMLService {
     
     <p>Would you like to join this event?</p>
     <ul style="list-style: none">
-      <li style="margin-bottom:10px">
+      <li style="${this.horizontalItem}">
         <a href="${link}?accept=true">
           <button style="${this.acceptBtn}">Accept</button>
         </a>
       </li>
-      <li style="margin-bottom:10px">
+      <li style="${this.horizontalItem}">
         <a href="${link}?accept=false">
           <button style="${this.rejectBtn}">Reject</button>
         </a>

@@ -1,4 +1,4 @@
-import {Column, Entity, OneToMany} from "typeorm";
+import {Column, Entity, OneToMany, Unique} from "typeorm";
 import {Field, ObjectType} from "type-graphql";
 import {MutEntity} from "./BaseEntity";
 import {MembershipEntity} from "./MembershipEntity";
@@ -44,12 +44,10 @@ export class EventEntity extends MutEntity implements IEventEntity {
   }
 
   @Field(() => [MembershipEntity])
-  @OneToMany(() => MembershipEntity, membership => membership.event, {
-    cascade: ['insert']
-  })
+  @OneToMany(() => MembershipEntity, membership => membership.event, { cascade: true })
   memberships: MembershipEntity[];
 
   @Field(() => [InviteTokenEntity])
-  @OneToMany(() => InviteTokenEntity, invite => invite.event)
-  invites: InviteTokenEntity;
+  @OneToMany(() => InviteTokenEntity, invite => invite.event, { cascade: true })
+  invites: InviteTokenEntity[];
 }

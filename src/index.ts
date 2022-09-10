@@ -10,12 +10,12 @@ import EventResolver from "./resolvers/EventResolver";
 import {ResolverData} from "type-graphql/dist/interfaces/ResolverData";
 import {DateTime} from "luxon";
 import {DateTimeScalar} from "./utils/graphql";
-
+import {TestResolver} from "./resolvers/TestResolver";
 
 (async () => {
   await createConnection();
   const schema = await buildSchema({
-    resolvers: [AuthResolver, EventResolver],
+    resolvers: [AuthResolver, EventResolver, TestResolver],
     authChecker,
     scalarsMap: [
       {type: DateTime, scalar: DateTimeScalar}

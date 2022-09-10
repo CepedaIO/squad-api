@@ -26,6 +26,6 @@ export class AvailabilityEntity extends MutEntity implements IAvailabilityEntity
   @Column(DateTimeColumn)
   end: DateTime;
 
-  @ManyToOne(() => MembershipEntity, membership => membership.availabilities)
+  @ManyToOne(() => MembershipEntity, membership => membership.availabilities, { nullable:false, onDelete:'CASCADE' })
   membership: MembershipEntity;
 }
