@@ -32,7 +32,7 @@ export class HTMLService {
     <ul style="list-style: none">
       <li style="margin-bottom:10px">
         <a href="${link}?expires=0">
-          <button style="">Expire after 1 hour</button>
+          <button style="${this.acceptBtn}">Expire after 1 hour</button>
         </a>
       </li>
       <li style="margin-bottom:10px">

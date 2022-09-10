@@ -29,9 +29,8 @@ export default class AuthResolver {
     @Arg("uuid") uuid: string,
     @Arg("key") key: string,
     @Arg("expires", () => Int) expires: SessionExpiration,
-    @Ctx() ctx: Context
   ): Promise<SimpleResponse> {
-    return this.authService.useLoginToken(uuid, key, expires, ctx)
+    return this.authService.useLoginToken(uuid, key, expires)
   }
 
   @DevOnly()

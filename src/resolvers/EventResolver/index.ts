@@ -1,4 +1,4 @@
-import {Arg, Ctx, Mutation, Query, Resolver} from "type-graphql";
+import {Arg, Ctx, Mutation, Query, Resolver, UnauthorizedError} from "type-graphql";
 import {ForbiddenError} from "apollo-server-errors";
 import {EventEntity} from "../../entities/EventEntity";
 import {Authenticated} from "../../decorators/Authenticated";
@@ -6,7 +6,7 @@ import {Transaction} from "../../decorators/Transaction";
 import {Service} from "typedi";
 import {MembershipEntity} from "../../entities/MembershipEntity";
 import {AvailabilityEntity} from "../../entities/AvailabilityEntity";
-import {AuthenticatedContext} from "../../utils/context";
+import {AuthenticatedContext, Context, isAuthenticatedContext} from "../../utils/context";
 import CreateEventInput from "./CreateEventInput";
 import {MembershipPermissionsEntity} from "../../entities/MembershipPermissionEntity";
 import {EventSummary} from "./EventSummary";
@@ -19,7 +19,9 @@ import {DateTime} from "luxon";
 import {appConfig} from "../../configs/app";
 import {HTMLService} from "../../services/HTMLService";
 import {providers} from "../../providers";
-import {randomBytes} from "crypto";
+import AcceptInviteInput from "./AcceptInviteInput";
+import {createKey} from "../../utils/bag";
+import SessionService from "../../services/SessionService";
 
 @Service()
 @Resolver()
@@ -27,7 +29,8 @@ export default class EventResolver {
   constructor(
     private manager: EntityManager,
     private membershipService: MembershipService,
-    private htmlService: HTMLService
+    private htmlService: HTMLService,
+    private sessionService: SessionService
   ) {}
 
   @Authenticated()
@@ -86,9 +89,6 @@ export default class EventResolver {
   async getEvents(
     @Ctx() ctx: AuthenticatedContext
   ): Promise<EventEntity[]> {
-    /**
-     * TODO: Everyone needs permissions, no left join here
-     */
     return this.manager.createQueryBuilder(EventEntity, 'e')
       .innerJoinAndSelect('e.memberships', 'm')
       .innerJoinAndSelect('m.availabilities', 'a')
@@ -114,6 +114,48 @@ export default class EventResolver {
       .getOne();
   }
 
+  @Mutation(() => SimpleResponse, {
+    description: 'Adds user to event and returns authenticated session'
+  })
+  async acceptInvite(
+    @Arg('payload') payload: AcceptInviteInput,
+    @Ctx() ctx: Context
+  ): Promise<SimpleResponse> {
+    const { uuid, key, eventId, displayName, availabilities, expires } = payload;
+
+    const invite = await this.manager.findOne(InviteTokenEntity, {
+      uuid, key, event: { id: eventId }
+    });
+
+    if(!invite) {
+      throw new UnauthorizedError();
+    }
+
+    await this.manager.save(MembershipEntity, {
+      email: invite.email,
+      displayName,
+      availabilities: availabilities.map((form) => this.manager.create(AvailabilityEntity, form))
+    });
+
+    if(isAuthenticatedContext(ctx)) {
+      return {
+        success: true,
+        result: await this.sessionService.toJWT(ctx)
+      }
+    }
+
+    const session = await this.sessionService.createSession({
+      email: invite.email,
+      expires,
+      authenticated: true
+    });
+
+    return {
+      success: true,
+      result: await this.sessionService.toJWT(session)
+    };
+  }
+
   @Authenticated()
   @Mutation(() => SimpleResponse, {
     description: 'Invite a user to this event'
@@ -137,7 +179,7 @@ export default class EventResolver {
     const invite = await this.manager.save(InviteTokenEntity, {
       email,
       event,
-      key: randomBytes(16).toString('hex'),
+      key: createKey(),
       expiresOn: DateTime.now().plus({days: 3})
     });
 

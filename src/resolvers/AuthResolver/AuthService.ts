@@ -1,8 +1,5 @@
 import {Context, isAuthenticatedContext, isSessionContext} from "../../utils/context";
 import {SessionEntity} from "../../entities/SessionEntity";
-import {randomBytes} from "crypto";
-import {DateTime} from "luxon";
-import {sign} from "../../utils/jwt";
 import {pick} from "lodash";
 import {LoginTokenEntity} from "../../entities/LoginTokenEntity";
 import {appConfig} from "../../configs/app";
@@ -11,60 +8,53 @@ import {SimpleResponse} from "../SimpleResponse";
 import {EntityManager} from "typeorm";
 import {HTMLService} from "../../services/HTMLService";
 import {providers} from "../../providers";
+import {registerEnumType} from "type-graphql";
+import SessionService from "../../services/SessionService";
+import {createKey} from "../../utils/bag";
 
 export enum SessionExpiration {
   ONE_HOUR,
   ONE_WEEK
 }
 
+registerEnumType(SessionExpiration, {
+  name: 'SessionExpiration',
+  description: 'Available session expiration options'
+});
+
 @Service()
 export default class AuthService {
   constructor(
     private manager: EntityManager,
-    private htmlService: HTMLService
+    private htmlService: HTMLService,
+    private sessionService: SessionService
   ) {}
 
   async getNewToken(email: string): Promise<SimpleResponse> {
-    const session = await this.manager.save(SessionEntity, {
-      key: randomBytes(16).toString('hex'),
-      email,
-      authenticated: true,
-      expiresOn: DateTime.now().plus({
-        minutes: 5
-      })
-    });
-
-    const token = await sign(pick(session, 'uuid', 'key'));
-
-    return {success: true, result: token};
+    const session = await this.sessionService.createShortSession(email);
+    return {
+      success: true,
+      result: await this.sessionService.toJWT(session)
+    };
   }
 
   async login(email: string, ctx: Context) {
     if (isAuthenticatedContext(ctx) && ctx.email === email) {
-      const token = await sign(pick(ctx, 'uuid', 'key'));
+      const token = await this.sessionService.toJWT(ctx);
       return {success: true, result: token};
     }
 
     if (isSessionContext(ctx)) {
-      await this.manager.remove(SessionEntity, pick(ctx, 'uuid', 'key'));
+      await this.manager.delete(SessionEntity, pick(ctx, 'uuid', 'key'));
     }
 
-    const session = await this.manager.save(SessionEntity, {
-      key: randomBytes(16).toString('hex'),
-      email,
-      expiresOn: DateTime.now().plus({
-        minutes: 10
-      })
+    const session = await this.sessionService.createShortSession(email);
+    const login = await this.manager.save(LoginTokenEntity, {
+      key: createKey(),
+      session
     });
 
-    const login = await this.manager.save(LoginTokenEntity, {
-      key: randomBytes(16).toString('hex'),
-      session
-    })
-
-    const token = await sign(pick(session, 'uuid', 'key'));
     const emailer = providers.emailerFor(email);
-
     await emailer.sendMail({
       from: appConfig.fromNoReply,
       to: email,
@@ -72,28 +62,25 @@ export default class AuthService {
       html: this.htmlService.login(login)
     });
 
-    return {success: true, result: token};
+    return {
+      success: true,
+      result: await this.sessionService.toJWT(session)
+    };
   }
 
-  async useLoginToken(uuid:string, key:string, expires:SessionExpiration, ctx: Context) {
-    if(isAuthenticatedContext(ctx)) {
-      return { success: true, result: 'Already logged in, silly goose' };
-    }
-
+  async useLoginToken(uuid:string, key:string, expires:SessionExpiration) {
     try {
       const {session} = await this.manager.findOneOrFail(LoginTokenEntity, { uuid, key });
+      await this.manager.delete(SessionEntity, session);
       await this.manager.delete(LoginTokenEntity, { uuid, key });
-      const expiresOn = expires === SessionExpiration.ONE_HOUR ? DateTime.now().plus({ hour:1 }) : DateTime.now().plus({ weeks:2 })
 
-      await this.manager.save(SessionEntity, {
-        ...session,
-        authenticated: true,
-        expiresOn
-      });
+      const authenticated = await this.sessionService.authenticateSession(session, expires);
+      return {
+        success: true,
+        result: await this.sessionService.toJWT(authenticated)
+      };
     } catch (e) {
       return { success: false, result: 'Go away' };
     }
-
-    return {success: true, result: 'You\'re in baby!'};
   }
 }

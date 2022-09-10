@@ -1,4 +1,4 @@
-import {Column, Entity, Generated} from "typeorm";
+import {Column, Entity, Generated, Unique} from "typeorm";
 import {MutEntity} from "./BaseEntity";
 import {Field} from "type-graphql";
 
