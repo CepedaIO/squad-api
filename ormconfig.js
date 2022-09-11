@@ -1,5 +1,8 @@
 const SnakeNamingStrategy = require("typeorm-naming-strategies").SnakeNamingStrategy;
 
+const fromDist = process.argv[1].includes('dist');
+const root = fromDist ? 'dist' : 'src';
+
 module.exports = {
   type: 'postgres',
   debug: process.env.NODE_ENV !== 'production',
@@ -9,7 +12,7 @@ module.exports = {
   password: process.env.POSTGRES_PASSWORD || 'password',
   database: process.env.POSTGRES_DB || 'event-matcher',
   entities: [
-    'src/entities/**/**.{ts,js}',
+    `${root}/entities/**/**.{ts,js}`
   ],
   synchronize: true,
   namingStrategy: new SnakeNamingStrategy()
