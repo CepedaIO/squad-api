@@ -4,15 +4,15 @@ import {ConnectionOptions} from "typeorm";
 
 const isProd = env.NODE_ENV === 'production';
 const isDev = !isProd;
-const entities = isProd ? 'dist/entities/**/**.js' : 'src/entities/**/**.ts'
+const entities = isProd ? 'dist/entities/**/**.{js,ts}' : 'src/entities/**/**.{js,ts}'
 
 let typeorm: ConnectionOptions = {
   type: 'postgres',
-  logging: !isDev,
+  logging: isDev,
   synchronize: true,
   entities:  [ entities ],
   namingStrategy: new SnakeNamingStrategy(),
-  host: env.POSTGRES_HOST || '0.0.0.0',
+  host: 'localhost',
   port: parseInt(env.POSTGRES_PORT || '5432'),
   username: env.POSTGRES_USER || 'superuser',
   password: env.POSTGRES_PASSWORD || 'password',

@@ -5,3 +5,4 @@ COPY . .
 RUN yarn install
 
 WORKDIR /mnt/host/src
+y

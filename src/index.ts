@@ -15,6 +15,7 @@ import {TestResolver} from "./resolvers/TestResolver";
 (async () => {
   console.log('Is Prod?', appConfig.isProd);
   console.log('Typeorm:', appConfig.typeorm);
+  console.log('Emailer:', appConfig.emailer);
   
   await createConnection(appConfig.typeorm);
   
