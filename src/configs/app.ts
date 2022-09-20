@@ -3,11 +3,12 @@ import {SnakeNamingStrategy} from "typeorm-naming-strategies";
 import {ConnectionOptions} from "typeorm";
 
 const isProd = env.NODE_ENV === 'production';
+const isDev = !isProd;
 const entities = isProd ? 'dist/entities/**/**.js' : 'src/entities/**/**.ts'
 
 let typeorm: ConnectionOptions = {
   type: 'postgres',
-  logging: true,
+  logging: !isDev,
   synchronize: true,
   entities:  [ entities ],
   namingStrategy: new SnakeNamingStrategy(),
@@ -20,11 +21,11 @@ let typeorm: ConnectionOptions = {
 
 export const appConfig = {
   typeorm,
+  isProd,
+  isDev,
   port: env.SERVER_PORT || 8100,
   clientPort: env.CLIENT_PORT || 3100,
   origin: '',
-  isProd: isProd,
-  isDev: !isProd,
   jwtSecret: 'w7%/L$0UE~9ukMWwA[FM%+bt:5]tKV',
   fromNoReply: 'no-reply@cepeda.io',
   emailer: {
@@ -48,4 +49,4 @@ if(!isProd) {
   };
 }
 
-appConfig.origin = appConfig.isProd ? 'https://squad.cepeda.io': `http://localhost:${appConfig.clientPort}`;
+appConfig.origin = isProd ? 'https://graph.cepeda.io': `http://localhost:${appConfig.clientPort}`;
