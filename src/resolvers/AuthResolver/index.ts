@@ -1,7 +1,7 @@
 import {Arg, Ctx, Int, Mutation, Query, Resolver} from "type-graphql";
 import {SimpleResponse} from "../SimpleResponse";
 import {Context, isAuthenticatedContext} from "../../utils/context";
-import {DevOnly} from "../../decorators/devOnly";
+import {DevOnly} from "../../decorators/DevOnly";
 import {Service} from "typedi";
 import AuthService, {SessionExpiration} from "./AuthService";
 import {Transaction} from "../../decorators/Transaction";
