@@ -13,7 +13,8 @@ import {DateTimeScalar} from "./utils/graphql";
 import {TestResolver} from "./resolvers/TestResolver";
 
 (async () => {
-  await createConnection();
+  console.log(appConfig.typeorm);
+  await createConnection(appConfig.typeorm);
   const schema = await buildSchema({
     resolvers: [AuthResolver, EventResolver, TestResolver],
     authChecker,

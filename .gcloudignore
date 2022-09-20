@@ -1,7 +1,6 @@
-node_modules
-src
-queries
-.idea
-*.lock
+/node_modules
+/src
+/queries
+/.idea
 *.log
 .env
