@@ -38,7 +38,7 @@ const context = async ({ req }): Promise<Context | SessionContext> => {
   const manager = getConnection().createEntityManager();
   context.container.set(EntityManager, manager);
 
-  if(appConfig.testUsers.includes(auth) && appConfig.isDev) {
+  if(appConfig.isDev && appConfig.testUsers.includes(auth)) {
     return {
       ...context,
       uuid: auth,

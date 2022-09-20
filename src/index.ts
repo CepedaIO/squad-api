@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import {appConfig} from "./configs/app";
-import {buildSchema} from "type-graphql";
+import {buildSchema, NonEmptyArray} from "type-graphql";
 import {ApolloServer} from "apollo-server";
 import {createConnection} from "typeorm";
 import {authChecker} from "./utils/authChecker";
@@ -13,10 +13,18 @@ import {DateTimeScalar} from "./utils/graphql";
 import {TestResolver} from "./resolvers/TestResolver";
 
 (async () => {
-  console.log(appConfig.typeorm);
+  console.log('Is Prod?', appConfig.isProd);
+  console.log('Typeorm:', appConfig.typeorm);
+  
   await createConnection(appConfig.typeorm);
+  
+  let resolvers:NonEmptyArray<Function> = [AuthResolver, EventResolver];
+  if(appConfig.isDev) {
+    resolvers = [...resolvers, TestResolver];
+  }
+  
   const schema = await buildSchema({
-    resolvers: [AuthResolver, EventResolver, TestResolver],
+    resolvers,
     authChecker,
     scalarsMap: [
       {type: DateTime, scalar: DateTimeScalar}

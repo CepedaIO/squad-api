@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node -r dotenv/config dist/index.js",
+    "start": "NODE_ENV=production node -r dotenv/config dist/index.js",
     "dev": "node -r ts-node/register -r dotenv/config --inspect=0.0.0.0:9229 src/index.ts",
     "watch": "nodemon",
     "build": "tsc",

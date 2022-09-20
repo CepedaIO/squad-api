@@ -13,7 +13,7 @@ export const testEmailer = createTransport({
 
 export const providers = {
   emailerFor(to: string) {
-    if(appConfig.testUsers.includes(to)) {
+    if(appConfig.isDev && appConfig.testUsers.includes(to)) {
       return testEmailer
     }
 
