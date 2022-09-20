@@ -7,8 +7,8 @@ export const emailer = createTransport({
 });
 
 export const testEmailer = createTransport({
-  host: appConfig.testMailer.host,
-  port: appConfig.testMailer.port
+  host: appConfig.testMailer?.host,
+  port: appConfig.testMailer?.port
 })
 
 export const providers = {
