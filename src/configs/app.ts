@@ -12,7 +12,7 @@ let typeorm: ConnectionOptions = {
   synchronize: true,
   entities:  [ entities ],
   namingStrategy: new SnakeNamingStrategy(),
-  host: 'localhost',
+  host: env.POSTGRES_HOST || 'localhost',
   port: parseInt(env.POSTGRES_PORT || '5432'),
   username: env.POSTGRES_USER || 'superuser',
   password: env.POSTGRES_PASSWORD || 'password',
