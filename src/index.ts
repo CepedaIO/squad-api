@@ -51,8 +51,8 @@ import * as http from "http";
   let httpServer;
   if(appConfig.isProd) {
     httpServer = https.createServer({
-      key: fs.readFileSync(`./certs/cepeda.io.key`),
-      cert: fs.readFileSync(`./certs/cepeda.io.crt`)
+      key: fs.readFileSync(`./certs/privkey.pem`),
+      cert: fs.readFileSync(`./certs/fullchain.pem`)
     }, app);
   } else {
     httpServer = http.createServer(app);
