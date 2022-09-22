@@ -59,10 +59,10 @@ import * as http from "http";
   }
   
   await new Promise<void>(resolve =>
-    httpServer.listen({ host:'0.0.0.0', port: appConfig.port }, resolve)
+    httpServer.listen({ host:'cepeda.io', port: appConfig.port }, resolve)
   );
   
-  const hostname = appConfig.isProd ? 'graph.cepeda.io' : 'localhost';
+  const hostname = appConfig.isProd ? 'cepeda.io' : 'localhost';
   console.log(
     '🚀 Server ready at',
     `http${appConfig.isProd ? 's' : ''}://${hostname}:${appConfig.port}${
