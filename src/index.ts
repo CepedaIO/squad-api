@@ -48,25 +48,26 @@ import * as http from "http";
   const app = express();
   server.applyMiddleware({ app });
   
-  let httpServer;
+  const hostname = appConfig.isProd ? 'graph.cepeda.io' : 'localhost';
   if(appConfig.isProd) {
-    httpServer = https.createServer({
-      key: fs.readFileSync(`./certs/privkey.pem`),
-      cert: fs.readFileSync(`./certs/fullchain.pem`)
+    const httpsServer = https.createServer({
+      key: fs.readFileSync(`/etc/letsencrypt/live/cepeda.io/privkey.pem`, 'utf-8'),
+      cert: fs.readFileSync(`/etc/letsencrypt/live/cepeda.io/fullchain.pem`, 'utf-8'),
+      ca: fs.readFileSync(`/etc/letsencrypt/live/cepeda.io/chain.pem`, 'utf-8')
     }, app);
-  } else {
-    httpServer = http.createServer(app);
+  
+    await new Promise<void>(resolve =>
+      httpsServer.listen(443, resolve)
+    );
+  
+    console.log(`🚀 Server ready at https://${hostname}${ server.graphqlPath }`);
   }
   
-  await new Promise<void>(resolve =>
-    httpServer.listen({ host:'cepeda.io', port: appConfig.port }, resolve)
-  );
+  const httpServer = http.createServer(app);
   
-  const hostname = appConfig.isProd ? 'cepeda.io' : 'localhost';
-  console.log(
-    '🚀 Server ready at',
-    `http${appConfig.isProd ? 's' : ''}://${hostname}:${appConfig.port}${
-      server.graphqlPath
-    }`
+  await new Promise<void>(resolve =>
+    httpServer.listen(80, resolve)
   );
+
+  console.log(`🚀 Server ready at http://${hostname}${ server.graphqlPath }`);
 })()
