@@ -51,9 +51,8 @@ import * as http from "http";
   const hostname = appConfig.isProd ? 'graph.cepeda.io' : 'localhost';
   if(appConfig.isProd) {
     const httpsServer = https.createServer({
-      key: fs.readFileSync(`/etc/letsencrypt/live/cepeda.io/privkey.pem`, 'utf-8'),
-      cert: fs.readFileSync(`/etc/letsencrypt/live/cepeda.io/fullchain.pem`, 'utf-8'),
-      ca: fs.readFileSync(`/etc/letsencrypt/live/cepeda.io/chain.pem`, 'utf-8')
+      key: fs.readFileSync(`./certs/privkey.pem`, 'utf-8'),
+      cert: fs.readFileSync(`./certs/fullchain.pem`, 'utf-8')
     }, app);
   
     await new Promise<void>(resolve =>
