@@ -26,7 +26,7 @@ export class CreateEventInput implements ICreateEventInput {
 }
 
 @InputType()
-export class AcceptInviteInput {
+export class AcceptEventInput {
   @Field()
   uuid: string;
   

@@ -55,10 +55,11 @@ export default class AuthService {
     });
 
     const emailer = providers.emailerFor(email);
+    const { fromNoReply } = appConfig;
     await emailer.sendMail({
       from: appConfig.fromNoReply,
       to: email,
-      subject: 'Login request to CepedaIO/Event-Matcher!',
+      subject: 'Login request to CepedaIO/Squad!',
       html: this.htmlService.login(login)
     });
 

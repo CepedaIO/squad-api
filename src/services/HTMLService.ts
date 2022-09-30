@@ -22,10 +22,10 @@ export class HTMLService {
     return `
 <html>
   <body>
-    <h1>Thank you for joining!</h1>
+    <h1>Welcome to Squad!</h1>
     
     <p>
-      That's about it! If you have any questions or run into any bugs, reach out to <a style="color:${this.blue};text-decoration:underline;cursor:pointer" href = "mailto:support@cepeda.io">support@cepeda.io</a>
+      If you have any questions or run into any bugs, reach out to <a style="color:${this.blue};text-decoration:underline;cursor:pointer" href = "mailto:support@cepeda.io">support@cepeda.io</a>
     </p>
     <p>
       How would you like to log in?
@@ -74,13 +74,13 @@ export class HTMLService {
     <p>Would you like to join this event?</p>
     <ul style="list-style: none">
       <li style="${this.horizontalItem}">
-        <a href="${link}?accept=true">
+        <a href="${link}">
           <button style="${this.acceptBtn}">Accept</button>
         </a>
       </li>
       <li style="${this.horizontalItem}">
-        <a href="${link}?accept=false">
-          <button style="${this.rejectBtn}">Reject</button>
+        <a href="${link}?reject=true">
+          <button style="${this.rejectBtn}">Don't Join</button>
         </a>
       </li>
     </ul>

@@ -27,4 +27,9 @@ export class MembershipService {
 
     return emails.map((email) => members.find((member) => member.email === email));
   }
+  
+  async isMember(eventId: number, email: string) : Promise<boolean> {
+    const memberships = this.membershipsFor(eventId, [email]);
+    return memberships[0];
+  }
 }

@@ -24,7 +24,6 @@ export const appConfig = {
   isProd,
   isDev,
   port: env.SERVER_PORT || 8100,
-  clientPort: env.CLIENT_PORT || 3100,
   origin: '',
   jwtSecret: 'w7%/L$0UE~9ukMWwA[FM%+bt:5]tKV',
   fromNoReply: 'no-reply@cepeda.io',
@@ -36,17 +35,18 @@ export const appConfig = {
   testMailer: null
 };
 
-if(!isProd) {
+if(isDev) {
   appConfig.testUsers = [
     'cypress@cepeda.io',
     'cypress-invited@cepeda.io',
     'apollo@cepeda.io',
     'test@cepeda.io'
   ];
+
   appConfig.testMailer = {
     host: 'host.docker.internal',
     port: 7777,
   };
 }
 
-appConfig.origin = isProd ? 'https://graph.cepeda.io': `http://localhost:${appConfig.clientPort}`;
+appConfig.origin = isProd ? 'https://squad.cepeda.io': `http://localhost:3100`;

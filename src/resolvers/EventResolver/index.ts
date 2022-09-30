@@ -18,9 +18,11 @@ import {appConfig} from "../../configs/app";
 import {HTMLService} from "../../services/HTMLService";
 import {providers} from "../../providers";
 import {createKey} from "../../utils/bag";
-import {AcceptInviteInput, CreateEventInput, InviteMemberInput} from "./inputs";
-import {EventSummary} from "./outputs";
+import {AcceptEventInput, CreateEventInput, InviteMemberInput} from "./inputs";
+import {EventSummary, eventSummaryFor} from "./outputs";
 import {pick} from "lodash";
+import {TokenService} from "../../services/TokenService";
+import {JoinTokenEntity} from "../../entities/JoinTokenEntity";
 
 @Service()
 @Resolver()
@@ -28,7 +30,8 @@ export default class EventResolver {
   constructor(
     private manager: EntityManager,
     private membershipService: MembershipService,
-    private htmlService: HTMLService
+    private htmlService: HTMLService,
+    private tokenService: TokenService
   ) {}
 
   @Authenticated()
@@ -100,6 +103,33 @@ export default class EventResolver {
       throw new AuthenticationError('You cannot get the summary of this event');
     }
     
+    return eventSummaryFor(event);
+  }
+  
+  @Query(() => EventSummary, {
+    description: "Get the summary of a specific event"
+  })
+  async getEventSummaryForInvite(
+    @Arg('uuid') uuid: string,
+    @Arg('key') key: string
+  ): Promise<EventSummary> {
+    const invite = await this.manager.createQueryBuilder(InviteTokenEntity, 'it')
+      .innerJoinAndSelect('it.event', 'e')
+      .innerJoinAndSelect('e.memberships', 'admin')
+      .leftJoin('admin.permissions', 'p', 'p.is_admin = true')
+      .where('it.uuid = :uuid', { uuid })
+      .andWhere('it.key = :key', { key })
+      .getOne();
+    
+    if(!invite) {
+      throw new AuthenticationError('You cannot get the summary of this invite');
+    }
+    
+    if(invite.expired) {
+      throw new ForbiddenError('Invite has expired');
+    }
+    
+    const { event } = invite;
     return Object.assign(new EventSummary(), event, {
       admin: event.memberships[0],
       duration: event.duration
@@ -132,19 +162,17 @@ export default class EventResolver {
     description: 'Adds user to event and returns authenticated session'
   })
   async acceptInvite(
-    @Arg('payload') payload: AcceptInviteInput,
+    @Arg('payload') payload: AcceptEventInput,
     @Ctx() ctx: Context
   ): Promise<SimpleResponse> {
-    const { uuid, key, eventId, displayName, availabilities } = payload;
+    const { uuid, key, displayName, availabilities } = payload;
 
-    const invite = await this.manager.findOne(InviteTokenEntity, {
-      uuid, key, event: { id: eventId }
-    }, {
+    const invite = await this.manager.findOne(InviteTokenEntity, { uuid, key }, {
       relations: ['event']
     });
 
     if(!invite) {
-      throw new AuthenticationError('You cannot invite anyone to that event');
+      throw new AuthenticationError('Was unable to join event');
     }
     
     await this.manager.delete(InviteTokenEntity, pick(invite, 'id'));
@@ -215,6 +243,47 @@ export default class EventResolver {
     return {
       success: true,
       result: `Invite sent to ${email}`
+    };
+  }
+  
+  @Authenticated()
+  @Mutation(() => JoinTokenEntity, {
+    description: 'Create a join link for anyone to join the event with'
+  })
+  async createJoinToken(
+    @Arg('id') id: number,
+    @Arg('message') message: string,
+    @Ctx() ctx: AuthenticatedContext
+  ): Promise<JoinTokenEntity> {
+    const isMember = await this.membershipService.isMember(id, ctx.email);
+    if(!isMember) {
+      throw new ForbiddenError('You are not a member of this event');
+    }
+    
+    return this.tokenService.createJoinToken(id, ctx.email, message);
+  }
+  
+  @Authenticated()
+  @Mutation(() => SimpleResponse, {
+    description: ''
+  })
+  async useJoinToken(
+    @Arg('uuid') uuid: string,
+    @Arg('key') key: string,
+    @Ctx() ctx: AuthenticatedContext
+  ): Promise<SimpleResponse> {
+    const token = await this.manager.findOne(JoinTokenEntity, { uuid, key });
+    
+    if(!token) {
+      throw new UserInputError(`Invalid token`);
+    }
+    
+    await this.manager.delete(JoinTokenEntity, token);
+    
+    
+    return {
+      success: true,
+      result: 'testing'
     };
   }
 }

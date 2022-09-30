@@ -12,6 +12,7 @@ import {ResolverData} from "type-graphql/dist/interfaces/ResolverData";
 import {DateTime} from "luxon";
 import {DateTimeScalar} from "./utils/graphql";
 import {TestResolver} from "./resolvers/TestResolver";
+import cors from "cors";
 import * as https from "https";
 import * as fs from "fs";
 import * as http from "http";
@@ -46,6 +47,10 @@ import * as http from "http";
   await server.start();
 
   const app = express();
+  app.use(cors({
+    origin: '*'
+  }));
+  
   server.applyMiddleware({ app });
   
   const hostname = appConfig.isProd ? 'graph.cepeda.io' : 'localhost';
@@ -65,7 +70,7 @@ import * as http from "http";
   const httpServer = http.createServer(app);
   
   await new Promise<void>(resolve =>
-    httpServer.listen(80, resolve)
+    httpServer.listen(8100, resolve)
   );
 
   console.log(`🚀 Server ready at http://${hostname}${ server.graphqlPath }`);
