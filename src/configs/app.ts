@@ -39,6 +39,7 @@ if(isDev) {
   appConfig.testUsers = [
     'cypress@cepeda.io',
     'cypress-invited@cepeda.io',
+    'cypress-invited2@cepeda.io',
     'apollo@cepeda.io',
     'test@cepeda.io'
   ];

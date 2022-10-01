@@ -19,7 +19,7 @@ import {HTMLService} from "../../services/HTMLService";
 import {providers} from "../../providers";
 import {createKey} from "../../utils/bag";
 import {AcceptEventInput, CreateEventInput, InviteMemberInput} from "./inputs";
-import {EventSummary, eventSummaryFor} from "./outputs";
+import {EventSummary, eventSummaryFor, InviteSummary} from "./outputs";
 import {pick} from "lodash";
 import {TokenService} from "../../services/TokenService";
 import {JoinTokenEntity} from "../../entities/JoinTokenEntity";
@@ -190,6 +190,17 @@ export default class EventResolver {
     };
   }
 
+  @Authenticated()
+  @Query(() => [InviteSummary], {
+    description: 'Get all invites for user'
+  })
+  async getInviteSummaries(
+    @Ctx() ctx: AuthenticatedContext
+  ): Promise<InviteSummary[]> {
+    const { email } = ctx
+    return this.tokenService.getInviteSummaries(email);
+  }
+  
   @Authenticated()
   @Mutation(() => SimpleResponse, {
     description: 'Invite a member to this event'

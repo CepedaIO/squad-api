@@ -27,6 +27,7 @@ export class InviteTokenEntity extends BaseEntity {
   @Column({ nullable: false})
   email: string;
 
+  @Field(() => EventEntity)
   @ManyToOne(() => EventEntity, {
     nullable: false,
     onDelete: 'CASCADE'

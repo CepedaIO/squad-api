@@ -3,6 +3,7 @@ import {EntityManager} from "typeorm";
 import {JoinTokenEntity} from "../entities/JoinTokenEntity";
 import {DateTime} from "luxon";
 import {InviteTokenEntity} from "../entities/InviteTokenEntity";
+import {InviteSummary} from "../resolvers/EventResolver/outputs";
 
 type EventToken = JoinTokenEntity | InviteTokenEntity;
 
@@ -18,6 +19,25 @@ export class TokenService {
       from,
       event: { id: eventId },
       expiresOn: DateTime.now().endOf('day').plus({ days: 3 })
+    }));
+  }
+  
+  async getInviteSummaries(email: string): Promise<InviteSummary[]> {
+    const invites = await this.manager.createQueryBuilder(InviteTokenEntity, 'it')
+      .innerJoinAndSelect('it.event', 'e')
+      .innerJoinAndSelect('e.memberships', 'm', 'm.email = it.from')
+      .where('it.email = :email', { email })
+      .getMany();
+ 
+    return invites.map((invite) => ({
+      uuid: invite.uuid,
+      key: invite.key,
+      event: {
+        id: invite.event.id,
+        name: invite.event.name
+      },
+      from: invite.event.memberships[0].displayName,
+      expiresOn: invite.expiresOn.toJSDate()
     }));
   }
   
