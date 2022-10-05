@@ -1,4 +1,4 @@
-import {Column, Entity, OneToMany, Unique} from "typeorm";
+import {Column, Entity, OneToMany} from "typeorm";
 import {Field, ObjectType} from "type-graphql";
 import {MutEntity} from "./BaseEntity";
 import {MembershipEntity} from "./MembershipEntity";
@@ -33,6 +33,20 @@ export class EventEntity extends MutEntity implements IEventEntity {
       [this.precision]: this.factor
     });
   }
+  
+  @OneToMany(
+    () => MembershipEntity,
+    membership => membership.event,
+    { cascade: ['insert'], eager: true }
+  )
+  memberships: MembershipEntity[];
+  
+  @OneToMany(
+    () => InviteTokenEntity,
+    invite => invite.event,
+    { cascade: ['insert'], eager: true }
+  )
+  invites: InviteTokenEntity[];
 
   set duration(val: Duration) {
     for(const [precision, factor] of Object.entries(val)) {
@@ -42,20 +56,4 @@ export class EventEntity extends MutEntity implements IEventEntity {
       }
     }
   }
-
-  @Field(() => [MembershipEntity])
-  @OneToMany(
-    () => MembershipEntity,
-    membership => membership.event,
-    { cascade: true, eager: true }
-  )
-  memberships: MembershipEntity[];
-
-  @Field(() => [InviteTokenEntity])
-  @OneToMany(
-    () => InviteTokenEntity,
-    invite => invite.event,
-    { cascade: true, eager: true }
-  )
-  invites: InviteTokenEntity[];
 }

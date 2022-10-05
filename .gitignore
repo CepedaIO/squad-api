@@ -6,3 +6,4 @@ dist
 .env
 schema.graphql
 certs
+letter.md

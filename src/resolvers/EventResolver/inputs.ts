@@ -2,7 +2,6 @@ import {Field, InputType} from "type-graphql";
 import {Duration} from "../Duration";
 import {RangeForm} from "../../entities/AvailabilityEntity";
 import {IAvailability, ICreateEventInput, IInviteMemberInput} from "event-matcher-shared";
-import {SessionExpiration} from "../AuthResolver/AuthService";
 
 @InputType()
 export class CreateEventInput implements ICreateEventInput {

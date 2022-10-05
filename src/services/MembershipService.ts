@@ -28,8 +28,14 @@ export class MembershipService {
     return emails.map((email) => members.find((member) => member.email === email));
   }
   
-  async isMember(eventId: number, email: string) : Promise<boolean> {
-    const memberships = this.membershipsFor(eventId, [email]);
-    return memberships[0];
+  async isAdmin(eventId: number, email: string) : Promise<boolean> {
+    const membership = await this.manager.createQueryBuilder(MembershipEntity, 'm')
+      .innerJoinAndSelect('m.permissions', 'p')
+      .where('m.eventId = :eventId', { eventId })
+      .andWhere('m.email = :email', { email })
+      .andWhere('p.is_admin = true')
+      .getOne();
+    
+    return !!membership;
   }
 }

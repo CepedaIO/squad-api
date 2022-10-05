@@ -7,7 +7,7 @@ import {createConnection} from "typeorm";
 import {authChecker} from "./utils/authChecker";
 import context, {Context} from "./utils/context";
 import AuthResolver from "./resolvers/AuthResolver";
-import EventResolver from "./resolvers/EventResolver";
+import EventQueries from "./resolvers/EventResolver/queries";
 import {ResolverData} from "type-graphql/dist/interfaces/ResolverData";
 import {DateTime} from "luxon";
 import {DateTimeScalar} from "./utils/graphql";
@@ -16,6 +16,9 @@ import cors from "cors";
 import * as https from "https";
 import * as fs from "fs";
 import * as http from "http";
+import EventMutations from "./resolvers/EventResolver/mutations";
+import UserQueries from "./resolvers/UserResolver/queries";
+import MembershipQueries from "./resolvers/MembershipResolver/queries";
 
 (async () => {
   console.log('Is Prod?', appConfig.isProd);
@@ -24,7 +27,7 @@ import * as http from "http";
   
   await createConnection(appConfig.typeorm);
   
-  let resolvers:NonEmptyArray<Function> = [AuthResolver, EventResolver];
+  let resolvers:NonEmptyArray<Function> = [AuthResolver, EventMutations, EventQueries, UserQueries, MembershipQueries];
   if(appConfig.isDev) {
     resolvers = [...resolvers, TestResolver];
   }

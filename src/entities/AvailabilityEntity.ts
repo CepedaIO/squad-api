@@ -1,5 +1,5 @@
 import {Field, InputType, ObjectType} from "type-graphql";
-import {Column, Entity, ManyToOne} from "typeorm";
+import {Column, Entity, JoinColumn, ManyToOne} from "typeorm";
 import {MutEntity} from "./BaseEntity";
 import {MembershipEntity} from "./MembershipEntity";
 import {IAvailabilityEntity, IRangeForm} from "event-matcher-shared";
@@ -25,11 +25,16 @@ export class AvailabilityEntity extends MutEntity implements IAvailabilityEntity
   @Field()
   @Column(DateTimeColumn)
   end: DateTime;
+  
+  @Column()
+  @Field()
+  membershipId: number;
 
   @ManyToOne(
     () => MembershipEntity,
     membership => membership.availabilities,
     { nullable:false, onDelete:'CASCADE' }
   )
+  @JoinColumn()
   membership: MembershipEntity;
 }

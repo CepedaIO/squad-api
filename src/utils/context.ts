@@ -5,11 +5,16 @@ import {DateTime} from "luxon";
 import {Container, ContainerInstance} from "typedi";
 import {appConfig} from "../configs/app";
 import {EntityManager, getConnection} from "typeorm";
+import {createEventEntityLoaders} from "../dataloaders/EventEntity";
+import {tokens} from "../tokens";
+import {createInviteTokenEntityLoaders} from "../dataloaders/InviteTokenEntity";
+import {createMembershipPermissionsEntityLoaders} from "../dataloaders/MembershipPermissionsEntity";
+import {createAvailabilityEntityLoaders} from "../dataloaders/AvailabilityEntity";
 
 export interface Context {
   container: ContainerInstance;
 }
-export interface SessionContext {
+export interface SessionContext extends Context {
   uuid: string;
   key: string;
   email: string;
@@ -31,12 +36,18 @@ export const isAuthenticatedContext = (obj:any): obj is AuthenticatedContext => 
 const context = async ({ req }): Promise<Context | SessionContext> => {
   const auth = req.headers.authorization || '';
   const requestId = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
-  const context:Context = {
-    container: Container.of(requestId.toString())
-  }
-
   const manager = getConnection().createEntityManager();
-  context.container.set(EntityManager, manager);
+  const container =  Container.of(requestId.toString())
+  
+  container.set(EntityManager, manager);
+  container.set(tokens.EventLoader, createEventEntityLoaders(manager));
+  container.set(tokens.InviteTokenLoader, createInviteTokenEntityLoaders(manager));
+  container.set(tokens.MembershipPermissionLoader, createMembershipPermissionsEntityLoaders(manager));
+  container.set(tokens.AvailabilityLoader, createAvailabilityEntityLoaders(manager));
+
+  const context:Context = {
+    container,
+  };
 
   if(appConfig.isDev && appConfig.testUsers.includes(auth)) {
     return {
