@@ -23,17 +23,15 @@ export const createEventEntityLoaders = (manager: EntityManager) => {
         })
       ).map((membership) => !!membership)
     ),
-    byIds: new DataLoader(async (ids: number[]) => {
-      const events = manager.find(EventEntity, {
+    byIds: new DataLoader(async (ids: number[]) =>
+      manager.find(EventEntity, {
         loadEagerRelations: true,
         relations: ['memberships', 'memberships.permissions', 'memberships.availabilities'],
         where: {
           id: In(ids)
         }
       })
-      
-      return events;
-    }),
+    ),
     byEmails: new DataLoader(async (emails: string[]): Promise<EventEntity[][]> => {
       const memberships = await manager.find(MembershipEntity, {
         where: {

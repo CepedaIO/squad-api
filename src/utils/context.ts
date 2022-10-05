@@ -10,6 +10,7 @@ import {tokens} from "../tokens";
 import {createInviteTokenEntityLoaders} from "../dataloaders/InviteTokenEntity";
 import {createMembershipPermissionsEntityLoaders} from "../dataloaders/MembershipPermissionsEntity";
 import {createAvailabilityEntityLoaders} from "../dataloaders/AvailabilityEntity";
+import {createMembershipEntityLoaders} from "../dataloaders/MembershipEntity";
 
 export interface Context {
   container: ContainerInstance;
@@ -44,6 +45,7 @@ const context = async ({ req }): Promise<Context | SessionContext> => {
   container.set(tokens.InviteTokenLoader, createInviteTokenEntityLoaders(manager));
   container.set(tokens.MembershipPermissionLoader, createMembershipPermissionsEntityLoaders(manager));
   container.set(tokens.AvailabilityLoader, createAvailabilityEntityLoaders(manager));
+  container.set(tokens.MembershipLoader, createMembershipEntityLoaders(manager));
 
   const context:Context = {
     container,
