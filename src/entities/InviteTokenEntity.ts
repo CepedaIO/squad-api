@@ -29,6 +29,10 @@ export class InviteTokenEntity extends BaseEntity implements  IInviteToken {
   @Field()
   @Column({ nullable: false})
   email: string;
+  
+  @Field()
+  @Column()
+  public eventId: number;
 
   @Field(() => EventEntity)
   @ManyToOne(() => EventEntity, {

@@ -1,10 +1,10 @@
 import {Inject, Service} from "typedi";
-import {Arg, Ctx, Query, Resolver,} from "type-graphql";
+import {Arg, Ctx, FieldResolver, Query, Resolver, Root,} from "type-graphql";
 import {InviteTokenEntity} from "../../entities/InviteTokenEntity";
 import {EntityManager} from "typeorm";
-import {Context} from "../../utils/context";
 import {EventLoader} from "../../dataloaders/EventEntity";
 import {tokens} from "../../tokens";
+import {EventEntity} from "../../entities/EventEntity";
 
 @Service()
 @Resolver(of => InviteTokenEntity)
@@ -20,8 +20,14 @@ export default class TokenQueries {
     @Arg('key') key: string
   ): Promise<InviteTokenEntity> {
     return this.manager.findOneOrFail(InviteTokenEntity, {
-      relations: ['event'],
-      where: { uuid, key}
+      where: { uuid, key }
     });
+  }
+  
+  @FieldResolver(() => EventEntity)
+  event(
+    @Root() invite: InviteTokenEntity
+  ): Promise<EventEntity> {
+    return this.eventLoader.byIds.load(invite.eventId);
   }
 }

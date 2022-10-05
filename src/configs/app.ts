@@ -45,7 +45,7 @@ if(isDev) {
   ];
 
   appConfig.testMailer = {
-    host: 'host.docker.internal',
+    host: 'localhost',
     port: 7777,
   };
 }
