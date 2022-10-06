@@ -7,7 +7,7 @@ import {appConfig} from "../configs/app";
 import {EntityManager, getConnection} from "typeorm";
 import {createEventEntityLoaders} from "../dataloaders/EventEntity";
 import {tokens} from "../tokens";
-import {createInviteTokenEntityLoaders} from "../dataloaders/InviteTokenEntity";
+import {createInviteTokenEntityLoaders, createJoinLinkEntityLoaders} from "../dataloaders/TokenEntity";
 import {createMembershipPermissionsEntityLoaders} from "../dataloaders/MembershipPermissionsEntity";
 import {createAvailabilityEntityLoaders} from "../dataloaders/AvailabilityEntity";
 import {createMembershipEntityLoaders} from "../dataloaders/MembershipEntity";
@@ -43,6 +43,7 @@ const context = async ({ req }): Promise<Context | SessionContext> => {
   container.set(EntityManager, manager);
   container.set(tokens.EventLoader, createEventEntityLoaders(manager));
   container.set(tokens.InviteTokenLoader, createInviteTokenEntityLoaders(manager));
+  container.set(tokens.JoinLinkLoader, createJoinLinkEntityLoaders(manager));
   container.set(tokens.MembershipPermissionLoader, createMembershipPermissionsEntityLoaders(manager));
   container.set(tokens.AvailabilityLoader, createAvailabilityEntityLoaders(manager));
   container.set(tokens.MembershipLoader, createMembershipEntityLoaders(manager));

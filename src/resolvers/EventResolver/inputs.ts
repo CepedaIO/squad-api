@@ -1,7 +1,7 @@
 import {Field, InputType} from "type-graphql";
 import {Duration} from "../Duration";
-import {RangeForm} from "../../entities/AvailabilityEntity";
-import {IAvailability, ICreateEventInput, IInviteMemberInput} from "event-matcher-shared";
+import {AvailabilityEntity, RangeForm} from "../../entities/AvailabilityEntity";
+import {ICreateEventInput, IInviteMemberInput} from "event-matcher-shared";
 
 @InputType()
 export class CreateEventInput implements ICreateEventInput {
@@ -21,7 +21,7 @@ export class CreateEventInput implements ICreateEventInput {
   displayName: string;
   
   @Field(() => [RangeForm])
-  availabilities: IAvailability[];
+  availabilities: AvailabilityEntity[];
 }
 
 @InputType()
@@ -39,7 +39,7 @@ export class AcceptEventInput {
   displayName: string;
   
   @Field(() => [RangeForm])
-  availabilities: IAvailability[];
+  availabilities: AvailabilityEntity[];
 }
 
 @InputType()

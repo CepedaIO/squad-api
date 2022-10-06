@@ -53,6 +53,12 @@ export default class EventMutations {
             this.manager.create(AvailabilityEntity, form)
           )
         })
+      ],
+      joinLinks: [
+        this.manager.create(JoinLinkEntity, {
+          key: createKey(),
+          message: payload.description,
+        })
       ]
     });
   

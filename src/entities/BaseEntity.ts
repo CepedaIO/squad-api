@@ -1,5 +1,7 @@
 import {Column, Generated, PrimaryGeneratedColumn} from "typeorm";
 import {Field, ObjectType} from "type-graphql";
+import {DateTime} from "luxon";
+import {DateTimeColumn} from "../utils/typeorm";
 
 @ObjectType()
 export abstract class BaseEntity {
@@ -8,13 +10,20 @@ export abstract class BaseEntity {
   id!: number;
 
   @Field()
-  @Column("timestamp", { default: () => "CURRENT_TIMESTAMP" })
-  createdOn!: Date;
+  @Column({
+    ...DateTimeColumn,
+    default: () => "CURRENT_TIMESTAMP"
+  })
+  createdOn!: DateTime;
 }
 
 @ObjectType()
 export class MutEntity extends BaseEntity {
   @Field()
-  @Column("timestamp", { default: () => "CURRENT_TIMESTAMP", onUpdate: "CURRENT_TIMESTAMP"})
-  modifiedOn!: Date;
+  @Column({
+    ...DateTimeColumn,
+    default: () => "CURRENT_TIMESTAMP",
+    onUpdate: "CURRENT_TIMESTAMP"
+  })
+  modifiedOn!: DateTime;
 }

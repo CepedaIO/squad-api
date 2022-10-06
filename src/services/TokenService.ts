@@ -17,12 +17,4 @@ export class TokenService {
       message
     }));
   }
-  
-  getJoinLinks(eventId: number) {
-    return this.manager.createQueryBuilder(JoinLinkEntity, 'jl')
-      .innerJoinAndSelect('jl.event', 'e')
-      .innerJoin('e.memberships', 'm')
-      .where('e.id = :eventId', { eventId })
-      .getMany();
-  }
 }

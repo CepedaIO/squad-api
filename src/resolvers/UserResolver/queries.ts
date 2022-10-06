@@ -6,7 +6,7 @@ import {tokens} from "../../tokens";
 import {EventLoader} from "../../dataloaders/EventEntity";
 import {AuthenticatedContext, Context} from "../../utils/context";
 import {Authenticated} from "../../decorators/Authenticated";
-import {InviteTokenLoader} from "../../dataloaders/InviteTokenEntity";
+import {InviteTokenLoader} from "../../dataloaders/TokenEntity";
 import {EventEntity} from "../../entities/EventEntity";
 
 @ObjectType()

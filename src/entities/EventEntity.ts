@@ -5,6 +5,7 @@ import {MembershipEntity} from "./MembershipEntity";
 import {IEventEntity} from "event-matcher-shared";
 import {Duration} from "../resolvers/Duration";
 import {InviteTokenEntity} from "./InviteTokenEntity";
+import {JoinLinkEntity} from "./JoinTokenEntity";
 
 @ObjectType()
 @Entity('events')
@@ -37,16 +38,23 @@ export class EventEntity extends MutEntity implements IEventEntity {
   @OneToMany(
     () => MembershipEntity,
     membership => membership.event,
-    { cascade: ['insert'], eager: true }
+    { cascade: ['insert'] }
   )
   memberships: MembershipEntity[];
   
   @OneToMany(
     () => InviteTokenEntity,
     invite => invite.event,
-    { cascade: ['insert'], eager: true }
+    { cascade: ['insert'] }
   )
   invites: InviteTokenEntity[];
+  
+  @OneToMany(
+    () => JoinLinkEntity,
+    link => link.event,
+    { cascade: ['insert'] }
+  )
+  joinLinks: JoinLinkEntity[];
 
   set duration(val: Duration) {
     for(const [precision, factor] of Object.entries(val)) {

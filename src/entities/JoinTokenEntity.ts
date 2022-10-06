@@ -16,26 +16,35 @@ export class JoinLinkEntity extends BaseEntity {
   @Column({ nullable: false })
   key: string;
   
-  @Field()
-  @Column(DateTimeColumn)
+  @Field({
+    nullable: true
+  })
+  @Column({
+    ...DateTimeColumn,
+    nullable: true
+  })
   expiresOn?: DateTime;
   
   @Field()
   @Column({ nullable: false })
   message: string;
   
+  @Field()
+  @Column({ nullable: false })
+  eventId: number;
+
   @ManyToOne(() => EventEntity, {
     nullable: false,
     onDelete: 'CASCADE'
   })
   @JoinColumn()
-  public event: EventEntity;
+  event: EventEntity;
   
   get expired() {
     return this.expiresOn <= DateTime.now();
   }
   
   get link() {
-    return path.join('/event', this.event.id.toString(), 'join', this.uuid, this.key);
+    return path.join('/event', this.eventId.toString(), 'join', this.uuid, this.key);
   }
 }

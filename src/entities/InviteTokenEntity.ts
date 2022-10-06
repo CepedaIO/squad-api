@@ -4,11 +4,11 @@ import {Field, ObjectType} from "type-graphql";
 import {EventEntity} from "./EventEntity";
 import {DateTime} from "luxon";
 import {DateTimeColumn} from "../utils/typeorm";
-import {IInviteToken} from "event-matcher-shared"
+import {IInviteTokenEntity} from "event-matcher-shared"
 
 @ObjectType()
 @Entity('invite_tokens')
-export class InviteTokenEntity extends BaseEntity implements  IInviteToken {
+export class InviteTokenEntity extends BaseEntity implements IInviteTokenEntity {
   @Field()
   @Column({ nullable: false})
   @Generated('uuid')

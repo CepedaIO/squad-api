@@ -14,6 +14,8 @@ import {TokenService} from "../../services/TokenService";
 import {JoinLinkEntity} from "../../entities/JoinTokenEntity";
 import {EventLoader} from "../../dataloaders/EventEntity";
 import {tokens} from "../../tokens";
+import {JoinLinkLoader} from "../../dataloaders/TokenEntity";
+import {MembershipLoader} from "../../dataloaders/MembershipEntity";
 
 @Service()
 @Resolver(() => EventEntity)
@@ -23,7 +25,9 @@ export default class EventQueries {
     private membershipService: MembershipService,
     private htmlService: HTMLService,
     private tokenService: TokenService,
-    @Inject(tokens.EventLoader) private eventLoader: EventLoader
+    @Inject(tokens.EventLoader) private eventLoader: EventLoader,
+    @Inject(tokens.MembershipLoader) private membershipLoader: MembershipLoader,
+    @Inject(tokens.JoinLinkLoader) private joinLinkLoader: JoinLinkLoader,
   ) {}
 
   @Authenticated()
@@ -71,31 +75,32 @@ export default class EventQueries {
   async admins(
     @Root() event: EventEntity
   ): Promise<MembershipEntity[]> {
-    return this.manager.find(MembershipEntity, {
-      relations: ['permissions'],
-      where: {
-        event,
-        permissions: {
-          isAdmin: true
-        }
-      }
-    });
+    const members = await this.membershipLoader.membersByEventIds.load(event.id);
+    return members.filter((member) => member.permissions.isAdmin);
   }
   
   @FieldResolver(() => [MembershipEntity])
   async memberships(
     @Root() event: EventEntity
   ): Promise<MembershipEntity[]> {
-    return this.manager.find(MembershipEntity, {
-      where: { event }
-    });
+    return this.membershipLoader.membersByEventIds.load(event.id);
+  }
+  
+  @FieldResolver(() => MembershipEntity)
+  async user(
+    @Root() event: EventEntity,
+    @Ctx() ctx: AuthenticatedContext
+  ): Promise<MembershipEntity> {
+    const members = await this.membershipLoader.membersByEventIds.load(event.id);
+    return members.find((member) => member.email === ctx.email);
   }
 
   @Authenticated()
-  @FieldResolver(() => [JoinLinkEntity])
-  async joinLinks(
+  @FieldResolver(() => String)
+  async joinLink(
     @Root() event: EventEntity,
-  ): Promise<JoinLinkEntity[]> {
-    return this.tokenService.getJoinLinks(event.id);
+  ): Promise<string> {
+    const joinLink = await this.joinLinkLoader.byEventId.load(event.id);
+    return joinLink.link;
   }
 }
