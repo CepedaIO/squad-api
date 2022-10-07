@@ -11,3 +11,6 @@ TRUNCATE events CASCADE ;
 DELETE FROM events WHERE id IN (SELECT event_id FROM memberships m WHERE m.email IN ('test@cypress.io'));
 
 SELECT event_id FROM "memberships" "m" WHERE "m"."email" IN ('cypress@cepeda.io');
+
+SELECT *
+FROM pending_memberships

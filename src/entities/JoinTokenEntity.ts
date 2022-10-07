@@ -1,19 +1,16 @@
 import {BaseEntity} from "./BaseEntity";
-import {Column, Entity, Generated, JoinColumn, ManyToOne} from "typeorm";
+import {Column, Entity, JoinColumn, ManyToOne} from "typeorm";
 import {Field, ObjectType} from "type-graphql";
 import {EventEntity} from "./EventEntity";
 import {DateTime} from "luxon";
 import {DateTimeColumn} from "../utils/typeorm";
 import path from "path";
+import {IJoinLinkEntity} from "event-matcher-shared";
 
 @ObjectType()
 @Entity('join_links')
-export class JoinLinkEntity extends BaseEntity {
-  @Column({ nullable: false})
-  @Generated('uuid')
-  uuid: string;
-  
-  @Column({ nullable: false })
+export class JoinLinkEntity extends BaseEntity implements IJoinLinkEntity {
+  @Column({ nullable: false, unique: true })
   key: string;
   
   @Field({
@@ -45,6 +42,6 @@ export class JoinLinkEntity extends BaseEntity {
   }
   
   get link() {
-    return path.join('/event', this.eventId.toString(), 'join', this.uuid, this.key);
+    return path.join('/join', this.key);
   }
 }

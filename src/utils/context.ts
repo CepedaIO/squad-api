@@ -11,6 +11,7 @@ import {createInviteTokenEntityLoaders, createJoinLinkEntityLoaders} from "../da
 import {createMembershipPermissionsEntityLoaders} from "../dataloaders/MembershipPermissionsEntity";
 import {createAvailabilityEntityLoaders} from "../dataloaders/AvailabilityEntity";
 import {createMembershipEntityLoaders} from "../dataloaders/MembershipEntity";
+import {createPendingMembershipEntityLoaders} from "../dataloaders/PendingMembershipEntity";
 
 export interface Context {
   container: ContainerInstance;
@@ -47,6 +48,7 @@ const context = async ({ req }): Promise<Context | SessionContext> => {
   container.set(tokens.MembershipPermissionLoader, createMembershipPermissionsEntityLoaders(manager));
   container.set(tokens.AvailabilityLoader, createAvailabilityEntityLoaders(manager));
   container.set(tokens.MembershipLoader, createMembershipEntityLoaders(manager));
+  container.set(tokens.PendingMembershipLoader, createPendingMembershipEntityLoaders(manager));
 
   const context:Context = {
     container,

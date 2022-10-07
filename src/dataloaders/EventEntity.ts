@@ -9,8 +9,10 @@ export const createEventEntityLoaders = (manager: EntityManager) => {
     areAdmins: new DataLoader(async (idEmails: [number, string][]) =>
       idEmails.map(([eventId, email]) =>
         manager.find(MembershipEntity, {
+          relations: ['permissions'],
           where: {
-            eventId, email,
+            eventId,
+            email,
             permissions: { isAdmin: true }
           }
         })

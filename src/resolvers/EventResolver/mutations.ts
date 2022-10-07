@@ -56,7 +56,7 @@ export default class EventMutations {
       ],
       joinLinks: [
         this.manager.create(JoinLinkEntity, {
-          key: createKey(),
+          key: createKey(8),
           message: payload.description,
         })
       ]
@@ -185,7 +185,7 @@ export default class EventMutations {
     @Arg('key') key: string,
     @Ctx() ctx: AuthenticatedContext
   ): Promise<SimpleResponse> {
-    const token = await this.manager.findOne(JoinLinkEntity, { uuid, key });
+    const token = await this.manager.findOne(JoinLinkEntity, { key });
     if(!token) {
       throw new UserInputError(`Invalid token`);
     }

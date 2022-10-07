@@ -19,7 +19,11 @@ import * as http from "http";
 import EventMutations from "./resolvers/EventResolver/mutations";
 import UserQueries from "./resolvers/UserResolver/queries";
 import MembershipQueries from "./resolvers/MembershipResolver/queries";
-import TokenQueries from "./resolvers/InviteResolver/queries";
+import InviteTokenQueries from "./resolvers/InviteResolver/queries";
+import JoinLinkQueries from "./resolvers/JoinLinkResolver/queries";
+import JoinLinkMutations from "./resolvers/JoinLinkResolver/mutations";
+import PendingMembershipQueries from "./resolvers/PendingMembershipResolver/queries";
+import PendingMembershipMutations from "./resolvers/PendingMembershipResolver/mutations";
 
 (async () => {
   console.log('Is Prod?', appConfig.isProd);
@@ -28,7 +32,14 @@ import TokenQueries from "./resolvers/InviteResolver/queries";
   
   await createConnection(appConfig.typeorm);
   
-  let resolvers:NonEmptyArray<Function> = [AuthResolver, EventMutations, EventQueries, UserQueries, MembershipQueries, TokenQueries];
+  let resolvers:NonEmptyArray<Function> = [
+    AuthResolver, UserQueries,
+    EventQueries, EventMutations,
+    MembershipQueries,
+    InviteTokenQueries,
+    JoinLinkQueries, JoinLinkMutations,
+    PendingMembershipQueries, PendingMembershipMutations
+  ];
   if(appConfig.isDev) {
     resolvers = [...resolvers, TestResolver];
   }

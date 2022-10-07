@@ -6,28 +6,24 @@ import {Inject, Service} from "typedi";
 import {MembershipEntity} from "../../entities/MembershipEntity";
 import {AuthenticatedContext} from "../../utils/context";
 import {EntityManager} from "typeorm";
-import {MembershipService} from "../../services/MembershipService";
 import {AuthenticationError} from "apollo-server";
-import {InviteTokenEntity} from "../../entities/InviteTokenEntity";
-import {HTMLService} from "../../services/HTMLService";
-import {TokenService} from "../../services/TokenService";
 import {JoinLinkEntity} from "../../entities/JoinTokenEntity";
 import {EventLoader} from "../../dataloaders/EventEntity";
 import {tokens} from "../../tokens";
 import {JoinLinkLoader} from "../../dataloaders/TokenEntity";
 import {MembershipLoader} from "../../dataloaders/MembershipEntity";
+import {PendingMembershipEntity} from "../../entities/PendingMembershipEntity";
+import {PendingMembershipLoader} from "../../dataloaders/PendingMembershipEntity";
 
 @Service()
 @Resolver(() => EventEntity)
 export default class EventQueries {
   constructor(
     private manager: EntityManager,
-    private membershipService: MembershipService,
-    private htmlService: HTMLService,
-    private tokenService: TokenService,
     @Inject(tokens.EventLoader) private eventLoader: EventLoader,
     @Inject(tokens.MembershipLoader) private membershipLoader: MembershipLoader,
     @Inject(tokens.JoinLinkLoader) private joinLinkLoader: JoinLinkLoader,
+    @Inject(tokens.PendingMembershipLoader) private  pendingMembershipLoader: PendingMembershipLoader
   ) {}
 
   @Authenticated()
@@ -49,26 +45,21 @@ export default class EventQueries {
   }
   
   @Query(() => EventEntity, {
-    description: "Get event for invite"
+    description: "Get event for join link"
   })
-  async eventFromInvite(
-    @Arg('uuid') uuid: string,
+  async eventFromJoinLink(
     @Arg('key') key: string
   ): Promise<EventEntity> {
-    const invite = await this.manager.findOneOrFail(InviteTokenEntity, {
+    const link = await this.manager.findOneOrFail(JoinLinkEntity, {
       relations: ['event'],
-      where: { uuid, key }
+      where: { key }
     });
-  
-    if(!invite) {
-      throw new AuthenticationError('You cannot get the summary of this invite');
-    }
-  
-    if(invite.expired) {
-      throw new ForbiddenError('Invite has expired');
+    
+    if(!link) {
+      throw new AuthenticationError('Cannot find join link');
     }
     
-    return invite.event;
+    return link.event;
   }
   
   @FieldResolver(() => [MembershipEntity])
@@ -100,7 +91,16 @@ export default class EventQueries {
   async joinLink(
     @Root() event: EventEntity,
   ): Promise<string> {
-    const joinLink = await this.joinLinkLoader.byEventId.load(event.id);
+    const joinLinks = await this.joinLinkLoader.byEventId.load(event.id);
+    const joinLink = joinLinks[0];
     return joinLink.link;
+  }
+  
+  @Authenticated()
+  @FieldResolver(() => [PendingMembershipEntity])
+  async pendingMemberships(
+    @Root() event: EventEntity
+  ): Promise<PendingMembershipEntity[]> {
+    return this.pendingMembershipLoader.byEventIds.load(event.id);
   }
 }

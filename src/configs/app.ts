@@ -40,6 +40,7 @@ if(isDev) {
     'cypress@cepeda.io',
     'cypress-invited@cepeda.io',
     'cypress-invited2@cepeda.io',
+    'join-user@cepeda.io',
     'apollo@cepeda.io',
     'test@cepeda.io'
   ];

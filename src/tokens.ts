@@ -5,6 +5,7 @@ import {InviteTokenLoader, JoinLinkLoader} from "./dataloaders/TokenEntity";
 import {MembershipPermissionsLoader} from "./dataloaders/MembershipPermissionsEntity";
 import {AvailabilityLoader} from "./dataloaders/AvailabilityEntity";
 import {MembershipLoader} from "./dataloaders/MembershipEntity";
+import {PendingMembershipLoader} from "./dataloaders/PendingMembershipEntity";
 
 export const tokens = {
   EntityManager: new Token<EntityManager>(),
@@ -14,5 +15,6 @@ export const tokens = {
   JoinLinkLoader: new Token<JoinLinkLoader>(),
   MembershipPermissionLoader: new Token<MembershipPermissionsLoader>(),
   AvailabilityLoader: new Token<AvailabilityLoader>(),
-  MembershipLoader: new Token<MembershipLoader>()
+  MembershipLoader: new Token<MembershipLoader>(),
+  PendingMembershipLoader: new Token<PendingMembershipLoader>()
 }
