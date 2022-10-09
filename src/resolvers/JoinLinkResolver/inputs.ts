@@ -1,5 +1,5 @@
 import {Field, InputType} from "type-graphql";
-import {AvailabilityEntity, RangeForm} from "../../entities/AvailabilityEntity";
+import {AvailabilityEntity, AvailabilityForm, RangeForm} from "../../entities/AvailabilityEntity";
 
 @InputType()
 export class RequestJoinInput {
@@ -12,6 +12,6 @@ export class RequestJoinInput {
   @Field()
   displayName: string;
   
-  @Field(() => [RangeForm])
+  @Field(() => [AvailabilityForm])
   availabilities: AvailabilityEntity[];
 }

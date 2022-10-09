@@ -6,6 +6,7 @@ import {IEventEntity} from "event-matcher-shared";
 import {Duration} from "../resolvers/Duration";
 import {InviteTokenEntity} from "./InviteTokenEntity";
 import {JoinLinkEntity} from "./JoinTokenEntity";
+import {Interval} from "luxon";
 
 @ObjectType()
 @Entity('events')
@@ -63,5 +64,13 @@ export class EventEntity extends MutEntity implements IEventEntity {
         this.factor = factor;
       }
     }
+  }
+  
+  intersection(interval: Interval): Interval[] {
+    /**
+     * This will matter more when events have their own availability constraints.
+     * Until then, we assume an event is "always available"
+     */
+    return [ interval ];
   }
 }

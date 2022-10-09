@@ -24,6 +24,7 @@ import JoinLinkQueries from "./resolvers/JoinLinkResolver/queries";
 import JoinLinkMutations from "./resolvers/JoinLinkResolver/mutations";
 import PendingMembershipQueries from "./resolvers/PendingMembershipResolver/queries";
 import PendingMembershipMutations from "./resolvers/PendingMembershipResolver/mutations";
+import GeneralQueries from "./resolvers/GeneralResolver/queries";
 
 (async () => {
   console.log('Is Prod?', appConfig.isProd);
@@ -38,7 +39,8 @@ import PendingMembershipMutations from "./resolvers/PendingMembershipResolver/mu
     MembershipQueries,
     InviteTokenQueries,
     JoinLinkQueries, JoinLinkMutations,
-    PendingMembershipQueries, PendingMembershipMutations
+    PendingMembershipQueries, PendingMembershipMutations,
+    GeneralQueries
   ];
   if(appConfig.isDev) {
     resolvers = [...resolvers, TestResolver];

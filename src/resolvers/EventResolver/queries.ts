@@ -14,12 +14,16 @@ import {JoinLinkLoader} from "../../dataloaders/TokenEntity";
 import {MembershipLoader} from "../../dataloaders/MembershipEntity";
 import {PendingMembershipEntity} from "../../entities/PendingMembershipEntity";
 import {PendingMembershipLoader} from "../../dataloaders/PendingMembershipEntity";
+import {RangeForm} from "../../entities/AvailabilityEntity";
+import EventService from "../../services/EventService";
+import {DateTime, Interval} from "luxon";
 
 @Service()
 @Resolver(() => EventEntity)
 export default class EventQueries {
   constructor(
     private manager: EntityManager,
+    private eventService: EventService,
     @Inject(tokens.EventLoader) private eventLoader: EventLoader,
     @Inject(tokens.MembershipLoader) private membershipLoader: MembershipLoader,
     @Inject(tokens.JoinLinkLoader) private joinLinkLoader: JoinLinkLoader,
@@ -102,5 +106,21 @@ export default class EventQueries {
     @Root() event: EventEntity
   ): Promise<PendingMembershipEntity[]> {
     return this.pendingMembershipLoader.byEventIds.load(event.id);
+  }
+  
+  @Authenticated()
+  @FieldResolver(() => [RangeForm], {
+    description: 'Calculation of all the intersections of availabilities with this event'
+  })
+  async availabilities (
+    @Root() event: EventEntity,
+    @Arg("start") start: Date,
+    @Arg("end") end: Date
+  ): Promise<RangeForm[]> {
+    const intervalScope = Interval.fromDateTimes(DateTime.fromJSDate(start), DateTime.fromJSDate(end));
+    const eventScope = event.intersection(intervalScope);
+    const intervals = await this.eventService.calculateAvailabilities(event.id, eventScope);
+    
+    return intervals.map((interval) => RangeForm.fromInterval(interval));
   }
 }

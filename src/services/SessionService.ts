@@ -45,7 +45,7 @@ export default class SessionService {
       key: createKey(),
       email,
       expiresOn: DateTime.now().plus({
-        minutes: 10
+        minutes: 20
       }),
       authenticated
     })

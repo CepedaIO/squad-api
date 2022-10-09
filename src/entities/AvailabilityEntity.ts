@@ -2,15 +2,31 @@ import {Field, InputType, ObjectType} from "type-graphql";
 import {Column, Entity, JoinColumn, ManyToOne} from "typeorm";
 import {MutEntity} from "./BaseEntity";
 import {MembershipEntity} from "./MembershipEntity";
-import {IAvailabilityEntity, IRangeForm} from "event-matcher-shared";
-import {DateTime} from "luxon";
+import {IAvailabilityEntity, IRangeForm, IAvailabilityBase} from "event-matcher-shared";
+import {DateTime, Interval} from "luxon";
 import {DateTimeColumn} from "../utils/typeorm";
 
-@InputType()
+@ObjectType()
 export class RangeForm implements IRangeForm {
   @Field()
   start: DateTime;
 
+  @Field()
+  end: DateTime;
+  
+  static fromInterval(interval: Interval): RangeForm {
+    return Object.assign({}, new RangeForm(), {
+      start: interval.start,
+      end: interval.end
+    });
+  }
+}
+
+@InputType()
+export class AvailabilityForm implements IAvailabilityBase {
+  @Field()
+  start: DateTime;
+  
   @Field()
   end: DateTime;
 }
