@@ -1,14 +1,14 @@
 import {EntityManager, In} from "typeorm";
 import DataLoader from "dataloader";
-import {PendingMembershipEntity} from "../entities/PendingMembershipEntity";
+import {PendingMembership} from "../entities/PendingMembership";
 
 export type PendingMembershipLoader = ReturnType<typeof createPendingMembershipEntityLoaders>;
 export const createPendingMembershipEntityLoaders = (manager:EntityManager) => ({
   byIds: new DataLoader(async (ids: number[]) =>
-    manager.findByIds(PendingMembershipEntity, ids)
+    manager.findByIds(PendingMembership, ids)
   ),
   byEmails: new DataLoader(async (emails: string[]) => {
-    const memberships = await manager.find(PendingMembershipEntity, {
+    const memberships = await manager.find(PendingMembership, {
       where: { email: In(emails) }
     });
     
@@ -17,7 +17,7 @@ export const createPendingMembershipEntityLoaders = (manager:EntityManager) => (
     );
   }),
   byEventIds: new DataLoader(async (eventIds: number[]) => {
-    const memberships = await manager.find(PendingMembershipEntity, {
+    const memberships = await manager.find(PendingMembership, {
       where: { eventId: In(eventIds) }
     });
     

@@ -3,11 +3,11 @@ import {Arg, Mutation, Resolver} from "type-graphql";
 import {SimpleResponse} from "./SimpleResponse";
 import {EntityManager, In} from "typeorm";
 import {appConfig} from "../configs/app";
-import {MembershipEntity} from "../entities/MembershipEntity";
-import {EventEntity} from "../entities/EventEntity";
+import {Membership} from "../entities/Membership";
+import {Event} from "../entities/Event";
 import SessionService from "../services/SessionService";
 import {AuthenticationError} from "apollo-server";
-import {SessionEntity} from "../entities/SessionEntity";
+import {Session} from "../entities/Session";
 
 @Service()
 @Resolver()
@@ -21,10 +21,10 @@ export class TestResolver {
     description: 'Delete all data created by test users'
   })
   async deleteTestData(): Promise<SimpleResponse> {
-    const eventResult = await this.manager.createQueryBuilder(EventEntity, 'e')
+    const eventResult = await this.manager.createQueryBuilder(Event, 'e')
       .delete()
       .where(() => `id IN (${
-        this.manager.createQueryBuilder(MembershipEntity, 'm')
+        this.manager.createQueryBuilder(Membership, 'm')
           .select('event_id')
           .where(`m.email IN (:...emails)`)
           .getQuery()
@@ -35,7 +35,7 @@ export class TestResolver {
       })
       .execute();
     
-    const sessionResult = await this.manager.delete(SessionEntity, {
+    const sessionResult = await this.manager.delete(Session, {
       email: In(appConfig.testUsers)
     });
     

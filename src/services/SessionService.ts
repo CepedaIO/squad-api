@@ -1,7 +1,7 @@
 import {Service} from "typedi";
 import {EntityManager} from "typeorm";
 import {DateTime} from "luxon";
-import {SessionEntity} from "../entities/SessionEntity";
+import {Session} from "../entities/Session";
 import {SessionExpiration} from "../resolvers/AuthResolver/AuthService";
 import {createKey} from "../utils/bag";
 import {JWTToken, sign} from "../utils/jwt";
@@ -17,10 +17,10 @@ export default class SessionService {
     return sign(pick(ctx, 'uuid', 'key'));
   }
 
-  async authenticateSession(session: SessionEntity, expires: SessionExpiration): Promise<SessionEntity> {
+  async authenticateSession(session: Session, expires: SessionExpiration): Promise<Session> {
     const expiresOn = expires === SessionExpiration.ONE_HOUR ? DateTime.now().plus({ hour:1 }) : DateTime.now().plus({ weeks:2 })
 
-    return this.manager.save(SessionEntity, {
+    return this.manager.save(Session, {
       ...session,
       expiresOn,
       authenticated: true
@@ -29,10 +29,10 @@ export default class SessionService {
 
   async createSession(data: {
     email: string, expires: SessionExpiration, authenticated?: boolean
-  }): Promise<SessionEntity> {
+  }): Promise<Session> {
     const expiresOn = data.expires === SessionExpiration.ONE_HOUR ? DateTime.now().plus({ hour:1 }) : DateTime.now().plus({ weeks:2 })
 
-    return this.manager.save(SessionEntity, {
+    return this.manager.save(Session, {
       email: data.email,
       key: createKey(),
       authenticated: !!data.authenticated,
@@ -40,8 +40,8 @@ export default class SessionService {
     });
   }
 
-  async createShortSession(email: string, authenticated: boolean = false): Promise<SessionEntity> {
-    return this.manager.save(SessionEntity, {
+  async createShortSession(email: string, authenticated: boolean = false): Promise<Session> {
+    return this.manager.save(Session, {
       key: createKey(),
       email,
       expiresOn: DateTime.now().plus({

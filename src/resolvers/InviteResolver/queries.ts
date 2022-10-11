@@ -1,15 +1,15 @@
 import {Inject, Service} from "typedi";
 import {Arg, FieldResolver, Query, Resolver, Root} from "type-graphql";
-import {InviteTokenEntity} from "../../entities/InviteTokenEntity";
+import {InviteToken} from "../../entities/InviteToken";
 import {EntityManager} from "typeorm";
 import {EventLoader} from "../../dataloaders/EventEntity";
-import {tokens} from "../../tokens";
-import {EventEntity} from "../../entities/EventEntity";
+import {Event} from "../../entities/Event";
 import {InviteTokenLoader} from "../../dataloaders/TokenEntity";
 import {ForbiddenError} from "apollo-server-errors";
+import {tokens} from "../../utils/container";
 
 @Service()
-@Resolver(() => InviteTokenEntity)
+@Resolver(() => InviteToken)
 export default class InviteTokenQueries {
   constructor(
     private manager: EntityManager,
@@ -17,11 +17,11 @@ export default class InviteTokenQueries {
     @Inject(tokens.EventLoader) private eventLoader: EventLoader
   ) {}
 
-  @Query(() => InviteTokenEntity)
+  @Query(() => InviteToken)
   async invite(
     @Arg('uuid') uuid: string,
     @Arg('key') key: string
-  ): Promise<InviteTokenEntity> {
+  ): Promise<InviteToken> {
     const invite = await this.inviteLoader.byUUIDs.load(uuid);
     
     if(!invite || invite.key !== key) {
@@ -31,10 +31,10 @@ export default class InviteTokenQueries {
     return invite;
   }
   
-  @FieldResolver(() => EventEntity)
+  @FieldResolver(() => Event)
   event(
-    @Root() invite: InviteTokenEntity
-  ): Promise<EventEntity> {
+    @Root() invite: InviteToken
+  ): Promise<Event> {
     return this.eventLoader.byIds.load(invite.eventId);
   }
 }

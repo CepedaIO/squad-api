@@ -1,11 +1,11 @@
 import {EntityManager, In} from "typeorm";
 import DataLoader from "dataloader";
-import {AvailabilityEntity} from "../entities/AvailabilityEntity";
+import {MemberAvailability} from "../entities/MemberAvailability";
 
 export type AvailabilityLoader = ReturnType<typeof createAvailabilityEntityLoaders>;
 export const createAvailabilityEntityLoaders = (manager:EntityManager) => ({
   byMembershipIds: new DataLoader(async (membershipIds: number[]) => {
-    const availabilities = await manager.find(AvailabilityEntity, {
+    const availabilities = await manager.find(MemberAvailability, {
       where: {
         membershipId: In(membershipIds)
       }

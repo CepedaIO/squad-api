@@ -1,17 +1,17 @@
 import {EntityManager, In} from "typeorm";
 import DataLoader from "dataloader";
-import {InviteTokenEntity} from "../entities/InviteTokenEntity";
-import {JoinLinkEntity} from "../entities/JoinTokenEntity";
+import {InviteToken} from "../entities/InviteToken";
+import {JoinLink} from "../entities/JoinLink";
 
 export type InviteTokenLoader = ReturnType<typeof createInviteTokenEntityLoaders>;
 export const createInviteTokenEntityLoaders = (manager:EntityManager) => ({
   byUUIDs: new DataLoader(async (uuids: string[]) =>
-    manager.find(InviteTokenEntity, {
+    manager.find(InviteToken, {
       where: { uuid: In(uuids) }
     })
   ),
   byEmails: new DataLoader(async (emails: string[]) => {
-    const invites = await manager.find(InviteTokenEntity, {
+    const invites = await manager.find(InviteToken, {
       where: {email: In(emails)}
     });
     
@@ -24,7 +24,7 @@ export const createInviteTokenEntityLoaders = (manager:EntityManager) => ({
 export type JoinLinkLoader = ReturnType<typeof createJoinLinkEntityLoaders>;
 export const createJoinLinkEntityLoaders = (manager:EntityManager) => ({
   byEventId: new DataLoader(async (eventIds: number[]) => {
-    const joinLinks = await manager.find(JoinLinkEntity, {
+    const joinLinks = await manager.find(JoinLink, {
       where: { eventId: In(eventIds) }
     });
     
@@ -33,7 +33,7 @@ export const createJoinLinkEntityLoaders = (manager:EntityManager) => ({
     );
   }),
   byKeys: new DataLoader(async (keys: string[]) => {
-    const joinLinks = await manager.find(JoinLinkEntity, {
+    const joinLinks = await manager.find(JoinLink, {
       where: { key: In(keys) }
     });
     

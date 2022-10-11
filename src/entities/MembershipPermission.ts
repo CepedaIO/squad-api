@@ -1,20 +1,20 @@
 import {MutEntity} from "./BaseEntity";
 import {Column, Entity, JoinColumn, OneToOne} from "typeorm";
 import {Field, InputType, ObjectType} from "type-graphql";
-import {MembershipEntity} from "./MembershipEntity";
+import {Membership} from "./Membership";
 import {IMembershipPermissionsEntity} from "event-matcher-shared";
 
 @ObjectType('MembershipPermissionOut')
 @InputType('MembershipPermissionIn')
 @Entity('membership_permissions')
-export class MembershipPermissionsEntity extends MutEntity implements IMembershipPermissionsEntity {
+export class MembershipPermission extends MutEntity implements IMembershipPermissionsEntity {
   @Column()
   @Field()
   membershipId: number;
 
-  @OneToOne(() => MembershipEntity, { nullable: false, onDelete:'CASCADE' })
+  @OneToOne(() => Membership, { nullable: false, onDelete:'CASCADE' })
   @JoinColumn()
-  membership: MembershipEntity;
+  membership: Membership;
 
   @Field()
   @Column({ default: false })

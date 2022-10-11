@@ -1,10 +1,11 @@
 import {Inject, Service} from "typedi";
 import {EntityManager} from "typeorm";
 import {EventLoader} from "../dataloaders/EventEntity";
-import {tokens} from "../tokens";
 import {MembershipLoader} from "../dataloaders/MembershipEntity";
-import {Interval} from "luxon";
+import {Duration, Interval} from "luxon";
 import {AvailabilityUtils} from "../utils/shared-shim";
+import {tokens} from "../utils/container";
+import {IAvailabilityBase} from "event-matcher-shared";
 
 @Service()
 export default class EventService {
@@ -14,11 +15,37 @@ export default class EventService {
     @Inject(tokens.MembershipLoader) private membershipLoader: MembershipLoader
   ) {}
   
-  async calculateAvailabilities(eventId: number, scopes: Interval[]) {
+  async calculateEventMemberIntervals(eventId: number, start: Date, end: Date) {
     const memberships = await this.membershipLoader.membersByEventIds.load(eventId);
+    const memberAvailabilities = memberships.map((membership) => membership.availabilities);
+    const event = await this.eventLoader.byIds.load(eventId);
+    const scope = Interval.fromDateTimes(start, end);
+    const duration = Duration.fromDurationLike(event.duration);
+    const eventIntervals = AvailabilityUtils.intervalsFor(duration, scope, event.availabilities);
     
-    return Interval.merge(memberships.reduce((intervals, membership) =>
-      AvailabilityUtils.intersection(intervals, membership.availabilities)
-    , scopes));
+    const membershipIntervals = this.getAllMembershipIntervals(duration, eventIntervals, memberAvailabilities);
+    return this.reduceMembershipIntervals(duration, membershipIntervals);
+  }
+  
+  reduceMembershipIntervals(duration: Duration, membershipIntervals: Interval[][]): Interval[] {
+    const startMembership = membershipIntervals.pop();
+    return membershipIntervals.slice(-1).reduce((intervals, membershipIntervals) => {
+      return intervals.reduce((finalIntervals, interval) => {
+        const subIntervals = AvailabilityUtils.intervalsFor(duration, interval, membershipIntervals)
+        return finalIntervals.concat(subIntervals)
+      }, []);
+    }, startMembership)
+  }
+
+  getAllMembershipIntervals(duration: Duration, eventScopes: Interval[], memberAvailabilities: IAvailabilityBase[][]): Interval[][] {
+    const memberIntervals = Interval.merge(eventScopes).reduce((intervals, eventScope) => {
+      const subIntervals = memberAvailabilities.map((availabilities) =>
+        AvailabilityUtils.intervalsFor(duration, eventScope, availabilities)
+      );
+    
+      return intervals.map((memberInterval, index) => memberInterval.concat(subIntervals[index]));
+    }, memberAvailabilities.map(() => []))
+  
+    return memberIntervals.map((memberIntervals) => Interval.merge(memberIntervals))
   }
 }

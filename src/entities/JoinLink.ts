@@ -1,7 +1,7 @@
 import {BaseEntity} from "./BaseEntity";
 import {Column, Entity, JoinColumn, ManyToOne} from "typeorm";
 import {Field, ObjectType} from "type-graphql";
-import {EventEntity} from "./EventEntity";
+import {Event} from "./Event";
 import {DateTime} from "luxon";
 import {DateTimeColumn} from "../utils/typeorm";
 import path from "path";
@@ -9,7 +9,7 @@ import {IJoinLinkEntity} from "event-matcher-shared";
 
 @ObjectType()
 @Entity('join_links')
-export class JoinLinkEntity extends BaseEntity implements IJoinLinkEntity {
+export class JoinLink extends BaseEntity implements IJoinLinkEntity {
   @Column({ nullable: false, unique: true })
   key: string;
   
@@ -30,12 +30,12 @@ export class JoinLinkEntity extends BaseEntity implements IJoinLinkEntity {
   @Column({ nullable: false })
   eventId: number;
 
-  @ManyToOne(() => EventEntity, {
+  @ManyToOne(() => Event, {
     nullable: false,
     onDelete: 'CASCADE'
   })
   @JoinColumn()
-  event: EventEntity;
+  event: Event;
   
   get expired() {
     return this.expiresOn <= DateTime.now();

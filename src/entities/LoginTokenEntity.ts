@@ -1,6 +1,6 @@
 import {BaseEntity} from "./BaseEntity";
 import {Column, Entity, Generated, JoinColumn, OneToOne} from "typeorm";
-import {SessionEntity} from "./SessionEntity";
+import {Session} from "./Session";
 
 @Entity('login_tokens')
 export class LoginTokenEntity extends BaseEntity {
@@ -11,11 +11,11 @@ export class LoginTokenEntity extends BaseEntity {
   @Column({ nullable: false })
   key: string;
 
-  @OneToOne(() => SessionEntity, {
+  @OneToOne(() => Session, {
     nullable: false,
     eager: true,
     onDelete: 'CASCADE'
   })
   @JoinColumn()
-  public session: SessionEntity;
+  public session: Session;
 }

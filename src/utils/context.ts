@@ -1,17 +1,11 @@
 import {verify} from "./jwt";
-import {SessionEntity} from "../entities/SessionEntity";
+import {Session} from "../entities/Session";
 import {pick} from "lodash";
 import {DateTime} from "luxon";
-import {Container, ContainerInstance} from "typedi";
+import {ContainerInstance} from "typedi";
 import {appConfig} from "../configs/app";
-import {EntityManager, getConnection} from "typeorm";
-import {createEventEntityLoaders} from "../dataloaders/EventEntity";
-import {tokens} from "../tokens";
-import {createInviteTokenEntityLoaders, createJoinLinkEntityLoaders} from "../dataloaders/TokenEntity";
-import {createMembershipPermissionsEntityLoaders} from "../dataloaders/MembershipPermissionsEntity";
-import {createAvailabilityEntityLoaders} from "../dataloaders/AvailabilityEntity";
-import {createMembershipEntityLoaders} from "../dataloaders/MembershipEntity";
-import {createPendingMembershipEntityLoaders} from "../dataloaders/PendingMembershipEntity";
+import {getConnection} from "typeorm";
+import {createContainer} from "./container";
 
 export interface Context {
   container: ContainerInstance;
@@ -39,19 +33,9 @@ const context = async ({ req }): Promise<Context | SessionContext> => {
   const auth = req.headers.authorization || '';
   const requestId = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
   const manager = getConnection().createEntityManager();
-  const container =  Container.of(requestId.toString())
   
-  container.set(EntityManager, manager);
-  container.set(tokens.EventLoader, createEventEntityLoaders(manager));
-  container.set(tokens.InviteTokenLoader, createInviteTokenEntityLoaders(manager));
-  container.set(tokens.JoinLinkLoader, createJoinLinkEntityLoaders(manager));
-  container.set(tokens.MembershipPermissionLoader, createMembershipPermissionsEntityLoaders(manager));
-  container.set(tokens.AvailabilityLoader, createAvailabilityEntityLoaders(manager));
-  container.set(tokens.MembershipLoader, createMembershipEntityLoaders(manager));
-  container.set(tokens.PendingMembershipLoader, createPendingMembershipEntityLoaders(manager));
-
   const context:Context = {
-    container,
+    container: createContainer(requestId.toString(), manager)
   };
 
   if(appConfig.isDev && appConfig.testUsers.includes(auth)) {
@@ -68,13 +52,13 @@ const context = async ({ req }): Promise<Context | SessionContext> => {
     try {
       const { uuid, key } = await verify(auth);
 
-      const session = await manager.findOne(SessionEntity, {
+      const session = await manager.findOne(Session, {
         where: { uuid, key }
       });
 
       if(session) {
         if(DateTime.fromJSDate(session.expiresOn) <= DateTime.now()) {
-          await manager.remove(SessionEntity, session);
+          await manager.remove(Session, session);
         } else {
           return {
             ...context,

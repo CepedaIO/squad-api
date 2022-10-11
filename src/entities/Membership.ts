@@ -1,14 +1,14 @@
 import {Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne} from "typeorm";
 import {Field, ObjectType} from "type-graphql";
 import {MutEntity} from "./BaseEntity";
-import {AvailabilityEntity} from "./AvailabilityEntity";
-import {EventEntity} from "./EventEntity";
-import {MembershipPermissionsEntity} from "./MembershipPermissionEntity";
+import {MemberAvailability} from "./MemberAvailability";
+import {Event} from "./Event";
+import {MembershipPermission} from "./MembershipPermission";
 import {IMembershipEntity} from "event-matcher-shared";
 
 @ObjectType()
 @Entity('memberships')
-export class MembershipEntity extends MutEntity implements IMembershipEntity {
+export class Membership extends MutEntity implements IMembershipEntity {
   @Field()
   @Column()
   email: string;
@@ -21,23 +21,23 @@ export class MembershipEntity extends MutEntity implements IMembershipEntity {
   eventId: number;
 
   @ManyToOne(
-    () => EventEntity,
+    () => Event,
     event => event.memberships,
     { nullable: false, onDelete:'CASCADE' }
   )
-  event: EventEntity;
+  event: Event;
 
   @OneToOne(
-    () => MembershipPermissionsEntity,
+    () => MembershipPermission,
     permissions => permissions.membership,
     { nullable: false, cascade: ['insert'], eager: true }
   )
-  permissions: MembershipPermissionsEntity;
+  permissions: MembershipPermission;
 
   @OneToMany(
-    () => AvailabilityEntity,
+    () => MemberAvailability,
     availability => availability.membership,
     { cascade: ['insert'], eager: true }
   )
-  availabilities: AvailabilityEntity[];
+  availabilities: MemberAvailability[];
 }

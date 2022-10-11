@@ -1,8 +1,8 @@
 import {Service} from "typedi";
 import {EntityManager} from "typeorm";
-import {JoinLinkEntity} from "../entities/JoinTokenEntity";
+import {JoinLink} from "../entities/JoinLink";
 import {createKey} from "../utils/bag";
-import {EventEntity} from "../entities/EventEntity";
+import {Event} from "../entities/Event";
 
 @Service()
 export class TokenService {
@@ -10,8 +10,8 @@ export class TokenService {
     private manager: EntityManager
   ) {}
   
- async createJoinLink(event: EventEntity, message: string) {
-    return this.manager.save(JoinLinkEntity, this.manager.create(JoinLinkEntity, {
+ async createJoinLink(event: Event, message: string) {
+    return this.manager.save(JoinLink, this.manager.create(JoinLink, {
       key: createKey(),
       event,
       message

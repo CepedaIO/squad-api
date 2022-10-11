@@ -1,9 +1,8 @@
 import {Inject, Service} from "typedi";
 import {Arg, Ctx, Mutation, Resolver} from "type-graphql";
 import {EntityManager} from "typeorm";
-import {tokens} from "../../tokens";
 import {EventLoader} from "../../dataloaders/EventEntity";
-import {PendingMembershipEntity} from "../../entities/PendingMembershipEntity";
+import {PendingMembership} from "../../entities/PendingMembership";
 import {Authenticated} from "../../decorators/Authenticated";
 import {SimpleResponse} from "../SimpleResponse";
 import {MembershipLoader} from "../../dataloaders/MembershipEntity";
@@ -11,10 +10,11 @@ import {AuthenticatedContext} from "../../utils/context";
 import {ForbiddenError} from "apollo-server-errors";
 import {PendingMembershipLoader} from "../../dataloaders/PendingMembershipEntity";
 import {UserInputError} from "apollo-server";
-import {MembershipEntity} from "../../entities/MembershipEntity";
+import {Membership} from "../../entities/Membership";
+import {tokens} from "../../utils/container";
 
 @Service()
-@Resolver(() => PendingMembershipEntity)
+@Resolver(() => PendingMembership)
 export default class PendingMembershipMutations {
   constructor(
     private manager: EntityManager,
@@ -39,7 +39,7 @@ export default class PendingMembershipMutations {
     const pending = await this.pendingMembershipLoader.byIds.load(id);
     
     if(pending.eventId !== eventId) throw new UserInputError('Pending membership is not part of event');
-    await this.manager.save(MembershipEntity, {
+    await this.manager.save(Membership, {
       email: pending.email,
       displayName: pending.displayName,
       availabilities: pending.availabilities,
@@ -49,7 +49,7 @@ export default class PendingMembershipMutations {
       }
     });
     
-    await this.manager.delete(PendingMembershipEntity, { id: pending.id })
+    await this.manager.delete(PendingMembership, { id: pending.id })
     
     return {
       success: true,

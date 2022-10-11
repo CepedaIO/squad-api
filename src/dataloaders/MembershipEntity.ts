@@ -1,11 +1,11 @@
 import {EntityManager, In} from "typeorm";
 import DataLoader from "dataloader";
-import {MembershipEntity} from "../entities/MembershipEntity";
+import {Membership} from "../entities/Membership";
 
 export type MembershipLoader = ReturnType<typeof createMembershipEntityLoaders>;
 export const createMembershipEntityLoaders = (manager:EntityManager) => ({
   membersByEventIds: new DataLoader(async (eventIds: number[]) => {
-    const memberships = await manager.find(MembershipEntity, {
+    const memberships = await manager.find(Membership, {
       where: {eventId: In(eventIds)}
     });
     
@@ -14,7 +14,7 @@ export const createMembershipEntityLoaders = (manager:EntityManager) => ({
     );
   }),
   adminsByEventIds: new DataLoader(async (eventIds: number[]) => {
-    const memberships = await manager.find(MembershipEntity, {
+    const memberships = await manager.find(Membership, {
       where: {
         eventId: In(eventIds),
         permissions: { isAdmin: true }

@@ -3,11 +3,11 @@ import {Field, ObjectType} from "type-graphql";
 import {MutEntity} from "./BaseEntity";
 import {IPendingMembershipEntity, IAvailabilityBase, Demote} from "event-matcher-shared";
 import {promote} from "../utils/shared-shim";
-import {AvailabilityEntity} from "./AvailabilityEntity";
+import {MemberAvailability} from "./MemberAvailability";
 
 @ObjectType()
 @Entity('pending_memberships')
-export class PendingMembershipEntity extends MutEntity implements IPendingMembershipEntity {
+export class PendingMembership extends MutEntity implements IPendingMembershipEntity {
   @Field()
   @Column()
   email: string;
@@ -21,9 +21,9 @@ export class PendingMembershipEntity extends MutEntity implements IPendingMember
   
   @Column('jsonb', {
     transformer: {
-      to: (value: AvailabilityEntity[]) => value,
-      from: (value: Demote<AvailabilityEntity>[]) => promote(value)
+      to: (value: MemberAvailability[]) => value,
+      from: (value: Demote<MemberAvailability>[]) => promote(value)
     }
   })
-  availabilities: AvailabilityEntity[];
+  availabilities: MemberAvailability[];
 }

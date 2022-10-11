@@ -1,14 +1,14 @@
 import {BaseEntity} from "./BaseEntity";
 import {Column, Entity, Generated, JoinColumn, ManyToOne} from "typeorm";
 import {Field, ObjectType} from "type-graphql";
-import {EventEntity} from "./EventEntity";
+import {Event} from "./Event";
 import {DateTime} from "luxon";
 import {DateTimeColumn} from "../utils/typeorm";
 import {IInviteTokenEntity} from "event-matcher-shared"
 
 @ObjectType()
 @Entity('invite_tokens')
-export class InviteTokenEntity extends BaseEntity implements IInviteTokenEntity {
+export class InviteToken extends BaseEntity implements IInviteTokenEntity {
   @Field()
   @Column({ nullable: false})
   @Generated('uuid')
@@ -34,19 +34,19 @@ export class InviteTokenEntity extends BaseEntity implements IInviteTokenEntity 
   @Column()
   public eventId: number;
 
-  @Field(() => EventEntity)
-  @ManyToOne(() => EventEntity, {
+  @Field(() => Event)
+  @ManyToOne(() => Event, {
     nullable: false,
     onDelete: 'CASCADE'
   })
   @JoinColumn()
-  public event: EventEntity;
+  public event: Event;
   
   get expired() {
     return this.expiresOn <= DateTime.now();
   }
   
-  isFromWire(obj: any): obj is EventEntity {
+  isFromWire(obj: any): obj is Event {
     return !!obj.uuid && !!obj.key && !!obj.email;
   }
 }

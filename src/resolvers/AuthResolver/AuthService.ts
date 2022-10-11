@@ -1,5 +1,5 @@
 import {Context, isAuthenticatedContext, isSessionContext} from "../../utils/context";
-import {SessionEntity} from "../../entities/SessionEntity";
+import {Session} from "../../entities/Session";
 import {pick} from "lodash";
 import {LoginTokenEntity} from "../../entities/LoginTokenEntity";
 import {appConfig} from "../../configs/app";
@@ -45,7 +45,7 @@ export default class AuthService {
     }
 
     if (isSessionContext(ctx)) {
-      await this.manager.delete(SessionEntity, pick(ctx, 'uuid', 'key'));
+      await this.manager.delete(Session, pick(ctx, 'uuid', 'key'));
     }
 
     const session = await this.sessionService.createShortSession(email);
@@ -72,7 +72,7 @@ export default class AuthService {
   async useLoginToken(uuid:string, key:string, expires:SessionExpiration) {
     try {
       const {session} = await this.manager.findOneOrFail(LoginTokenEntity, { uuid, key });
-      await this.manager.delete(SessionEntity, session);
+      await this.manager.delete(Session, session);
       await this.manager.delete(LoginTokenEntity, { uuid, key });
 
       const authenticated = await this.sessionService.authenticateSession(session, expires);

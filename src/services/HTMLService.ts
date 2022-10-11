@@ -3,7 +3,7 @@ import {LoginTokenEntity} from "../entities/LoginTokenEntity";
 import {URL} from "url";
 import {appConfig} from "../configs/app";
 import {join} from "path";
-import {InviteTokenEntity} from "../entities/InviteTokenEntity";
+import {InviteToken} from "../entities/InviteToken";
 import {Service} from "typedi";
 
 @Service()
@@ -51,7 +51,7 @@ export class HTMLService {
 </html>`
   }
 
-  invite(invite: InviteTokenEntity, from:string, message: string) {
+  invite(invite: InviteToken, from:string, message: string) {
     const url = new URL(appConfig.origin)
     const event = invite.event;
     url.pathname = join('event', event.id.toString(), 'invite', invite.uuid, invite.key);

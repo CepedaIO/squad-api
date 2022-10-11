@@ -3,7 +3,7 @@ import {MutEntity} from "./BaseEntity";
 import {Field} from "type-graphql";
 
 @Entity('sessions')
-export class SessionEntity extends MutEntity {
+export class Session extends MutEntity {
   @Column()
   @Generated('uuid')
   uuid!: string;

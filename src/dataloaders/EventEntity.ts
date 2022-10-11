@@ -1,14 +1,14 @@
 import DataLoader from "dataloader";
 import {EntityManager, In} from "typeorm";
-import {EventEntity} from "../entities/EventEntity";
-import {MembershipEntity} from "../entities/MembershipEntity";
+import {Event} from "../entities/Event";
+import {Membership} from "../entities/Membership";
 
 export type EventLoader = ReturnType<typeof createEventEntityLoaders>;
 export const createEventEntityLoaders = (manager: EntityManager) => {
   const dataloaders = {
     areAdmins: new DataLoader(async (idEmails: [number, string][]) =>
       idEmails.map(([eventId, email]) =>
-        manager.find(MembershipEntity, {
+        manager.find(Membership, {
           relations: ['permissions'],
           where: {
             eventId,
@@ -20,13 +20,13 @@ export const createEventEntityLoaders = (manager: EntityManager) => {
     ),
     areMembers: new DataLoader(async (idEmails: [number, string][]) =>
       idEmails.map(([eventId, email]) =>
-        manager.find(MembershipEntity, {
+        manager.find(Membership, {
           where: { eventId, email }
         })
       ).map((membership) => !!membership)
     ),
     byIds: new DataLoader(async (ids: number[]) =>
-      manager.find(EventEntity, {
+      manager.find(Event, {
         loadEagerRelations: true,
         relations: ['memberships', 'memberships.permissions', 'memberships.availabilities'],
         where: {
@@ -34,8 +34,8 @@ export const createEventEntityLoaders = (manager: EntityManager) => {
         }
       })
     ),
-    byEmails: new DataLoader(async (emails: string[]): Promise<EventEntity[][]> => {
-      const memberships = await manager.find(MembershipEntity, {
+    byEmails: new DataLoader(async (emails: string[]): Promise<Event[][]> => {
+      const memberships = await manager.find(Membership, {
         where: {
           email: In(emails)
         }
@@ -45,7 +45,7 @@ export const createEventEntityLoaders = (manager: EntityManager) => {
       
       const eventOrErrors = await dataloaders.byIds.loadMany(eventIds);
       const errors = eventOrErrors.filter((eventOrError) => eventOrError instanceof Error);
-      const events = eventOrErrors.filter((eventOrError) => eventOrError instanceof EventEntity) as EventEntity[];
+      const events = eventOrErrors.filter((eventOrError) => eventOrError instanceof Event) as Event[];
       
       if(errors.length) {
         console.log('----Errors fetching events by emails----');

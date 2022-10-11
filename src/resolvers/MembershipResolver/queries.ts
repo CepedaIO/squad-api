@@ -1,15 +1,15 @@
 import {Inject, Service} from "typedi";
 import {FieldResolver, Resolver, Root} from "type-graphql";
 import {EntityManager} from "typeorm";
-import {tokens} from "../../tokens";
-import {MembershipEntity} from "../../entities/MembershipEntity";
+import {Membership} from "../../entities/Membership";
 import {MembershipPermissionsLoader} from "../../dataloaders/MembershipPermissionsEntity";
 import {AvailabilityLoader} from "../../dataloaders/AvailabilityEntity";
-import {MembershipPermissionsEntity} from "../../entities/MembershipPermissionEntity";
-import {AvailabilityEntity} from "../../entities/AvailabilityEntity";
+import {MembershipPermission} from "../../entities/MembershipPermission";
+import {MemberAvailability} from "../../entities/MemberAvailability";
+import {tokens} from "../../utils/container";
 
 @Service()
-@Resolver(() => MembershipEntity)
+@Resolver(() => Membership)
 export default class MembershipQueries {
   constructor(
     private manager: EntityManager,
@@ -17,16 +17,16 @@ export default class MembershipQueries {
     @Inject(tokens.AvailabilityLoader) private availabilityLoader: AvailabilityLoader
   ) {}
   
-  @FieldResolver(() => MembershipPermissionsEntity)
+  @FieldResolver(() => MembershipPermission)
   permissions(
-    @Root() membership: MembershipEntity
+    @Root() membership: Membership
   ) {
     return this.permissionLoader.byMembershipIds.load(membership.id);
   }
   
-  @FieldResolver(() => [AvailabilityEntity])
+  @FieldResolver(() => [MemberAvailability])
   availabilities(
-    @Root() membership: MembershipEntity
+    @Root() membership: Membership
   ) {
     return this.availabilityLoader.byMembershipIds.load(membership.id);
   }

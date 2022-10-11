@@ -5,14 +5,14 @@ import {MembershipService} from "../../services/MembershipService";
 import {HTMLService} from "../../services/HTMLService";
 import {TokenService} from "../../services/TokenService";
 import {Authenticated} from "../../decorators/Authenticated";
-import {EventEntity} from "../../entities/EventEntity";
-import {AcceptEventInput, CreateEventInput, InviteMemberInput} from "./inputs";
+import {Event, EventAvailability} from "../../entities/Event";
+import {AcceptEventInput, CreateEventInput, InviteMemberInput} from "./models";
 import {AuthenticatedContext, Context} from "../../utils/context";
-import {MembershipEntity} from "../../entities/MembershipEntity";
-import {MembershipPermissionsEntity} from "../../entities/MembershipPermissionEntity";
-import {AvailabilityEntity} from "../../entities/AvailabilityEntity";
+import {Membership} from "../../entities/Membership";
+import {MembershipPermission} from "../../entities/MembershipPermission";
+import {MemberAvailability} from "../../entities/MemberAvailability";
 import {SimpleResponse} from "../SimpleResponse";
-import {InviteTokenEntity} from "../../entities/InviteTokenEntity";
+import {InviteToken} from "../../entities/InviteToken";
 import {AuthenticationError, UserInputError} from "apollo-server";
 import {pick} from "lodash";
 import {ForbiddenError} from "apollo-server-errors";
@@ -20,7 +20,7 @@ import {createKey} from "../../utils/bag";
 import {DateTime} from "luxon";
 import {providers} from "../../providers";
 import {appConfig} from "../../configs/app";
-import {JoinLinkEntity} from "../../entities/JoinTokenEntity";
+import {JoinLink} from "../../entities/JoinLink";
 
 @Service()
 @Resolver()
@@ -33,29 +33,32 @@ export default class EventMutations {
   ) {}
   
   @Authenticated()
-  @Mutation(() => EventEntity, {
+  @Mutation(() => Event, {
     description: 'Create an event senora'
   })
   async createEvent(
     @Arg("payload", () => CreateEventInput) payload: CreateEventInput,
     @Ctx() ctx: AuthenticatedContext
-  ): Promise<EventEntity> {
-    const event = this.manager.create(EventEntity, {
+  ): Promise<Event> {
+    const event = this.manager.create(Event, {
       ...payload,
+      availabilities: payload.eventAvailabilities.map((form) =>
+        this.manager.create(EventAvailability, form)
+      ),
       memberships: [
-        this.manager.create(MembershipEntity, {
+        this.manager.create(Membership, {
           displayName: payload.displayName,
           email: ctx.email,
-          permissions: this.manager.create(MembershipPermissionsEntity, {
+          permissions: this.manager.create(MembershipPermission, {
             isAdmin: true
           }),
           availabilities: payload.availabilities.map((form) =>
-            this.manager.create(AvailabilityEntity, form)
+            this.manager.create(MemberAvailability, form)
           )
         })
       ],
       joinLinks: [
-        this.manager.create(JoinLinkEntity, {
+        this.manager.create(JoinLink, {
           key: createKey(8),
           message: payload.description,
         })
@@ -63,7 +66,7 @@ export default class EventMutations {
     });
   
     event.duration = payload.duration;
-    return this.manager.save(EventEntity, event);
+    return this.manager.save(Event, event);
   }
   
   @Mutation(() => SimpleResponse, {
@@ -75,7 +78,7 @@ export default class EventMutations {
   ): Promise<SimpleResponse> {
     const { uuid, key, displayName, availabilities } = payload;
     
-    const invite = await this.manager.findOne(InviteTokenEntity, { uuid, key }, {
+    const invite = await this.manager.findOne(InviteToken, { uuid, key }, {
       relations: ['event']
     });
     
@@ -83,13 +86,13 @@ export default class EventMutations {
       throw new AuthenticationError('Was unable to join event');
     }
     
-    await this.manager.delete(InviteTokenEntity, pick(invite, 'id'));
-    await this.manager.save(MembershipEntity, {
+    await this.manager.delete(InviteToken, pick(invite, 'id'));
+    await this.manager.save(Membership, {
       email: invite.email,
       displayName,
       event: invite.event,
-      availabilities: availabilities.map((form) => this.manager.create(AvailabilityEntity, form)),
-      permissions: this.manager.create(MembershipPermissionsEntity, { isAdmin: false })
+      availabilities: availabilities.map((form) => this.manager.create(MemberAvailability, form)),
+      permissions: this.manager.create(MembershipPermission, { isAdmin: false })
     });
     
     return {
@@ -108,7 +111,7 @@ export default class EventMutations {
   ): Promise<SimpleResponse> {
     const { id, email, message } = payload;
     
-    const pending = await this.manager.findOne(InviteTokenEntity, {
+    const pending = await this.manager.findOne(InviteToken, {
       where: {
         email,
         event: { id }
@@ -118,7 +121,7 @@ export default class EventMutations {
     if(pending && !pending.expired) {
       throw new UserInputError(`${email} already has a pending invite`)
     } else if(pending) {
-      await this.manager.delete(InviteTokenEntity, pending);
+      await this.manager.delete(InviteToken, pending);
     }
     
     const [fromMembership, toMembership] = await this.membershipService.membershipsFor(id, [ctx.email, email]);
@@ -131,8 +134,8 @@ export default class EventMutations {
       throw new UserInputError(`${email} is already a member of this event`);
     }
     
-    const event = await this.manager.findOneOrFail(EventEntity, { id });
-    const invite = await this.manager.save(InviteTokenEntity, {
+    const event = await this.manager.findOneOrFail(Event, { id });
+    const invite = await this.manager.save(InviteToken, {
       email,
       event,
       from: ctx.email,
@@ -155,14 +158,14 @@ export default class EventMutations {
   }
   
   @Authenticated()
-  @Mutation(() => JoinLinkEntity, {
+  @Mutation(() => JoinLink, {
     description: 'Create a join link for anyone to join the event with'
   })
   async createJoinLink(
     @Arg('eventId') eventId: number,
     @Arg('message') message: string,
     @Ctx() ctx: AuthenticatedContext
-  ): Promise<JoinLinkEntity> {
+  ): Promise<JoinLink> {
     const { email } = ctx;
     const isAdmin = await this.membershipService.isAdmin(eventId, email);
     
@@ -170,7 +173,7 @@ export default class EventMutations {
       throw new ForbiddenError('You must be the admin of this event');
     }
     
-    const event = await this.manager.findOneOrFail(EventEntity, {
+    const event = await this.manager.findOneOrFail(Event, {
       id: eventId
     });
     return this.tokenService.createJoinLink(event, message);
@@ -185,12 +188,12 @@ export default class EventMutations {
     @Arg('key') key: string,
     @Ctx() ctx: AuthenticatedContext
   ): Promise<SimpleResponse> {
-    const token = await this.manager.findOne(JoinLinkEntity, { key });
+    const token = await this.manager.findOne(JoinLink, { key });
     if(!token) {
       throw new UserInputError(`Invalid token`);
     }
     
-    await this.manager.delete(JoinLinkEntity, token);
+    await this.manager.delete(JoinLink, token);
     
     return {
       success: true,

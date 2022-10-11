@@ -2,13 +2,13 @@ import {Inject, Service} from "typedi";
 import {FieldResolver, Resolver, Root} from "type-graphql";
 import {EntityManager} from "typeorm";
 import {EventLoader} from "../../dataloaders/EventEntity";
-import {tokens} from "../../tokens";
-import {EventEntity} from "../../entities/EventEntity";
+import {Event} from "../../entities/Event";
 import {InviteTokenLoader} from "../../dataloaders/TokenEntity";
-import {PendingMembershipEntity} from "../../entities/PendingMembershipEntity";
+import {PendingMembership} from "../../entities/PendingMembership";
+import {tokens} from "../../utils/container";
 
 @Service()
-@Resolver(() => PendingMembershipEntity)
+@Resolver(() => PendingMembership)
 export default class PendingMembershipQueries {
   constructor(
     private manager: EntityManager,
@@ -16,10 +16,10 @@ export default class PendingMembershipQueries {
     @Inject(tokens.EventLoader) private eventLoader: EventLoader
   ) {}
   
-  @FieldResolver(() => EventEntity)
+  @FieldResolver(() => Event)
   event(
-    @Root() membership: PendingMembershipEntity
-  ): Promise<EventEntity> {
+    @Root() membership: PendingMembership
+  ): Promise<Event> {
     return this.eventLoader.byIds.load(membership.eventId);
   }
 }

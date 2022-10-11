@@ -1,15 +1,15 @@
 import {Inject, Service} from "typedi";
 import {Ctx, Field, FieldResolver, ObjectType, Query, Resolver} from "type-graphql";
-import {InviteTokenEntity} from "../../entities/InviteTokenEntity";
+import {InviteToken} from "../../entities/InviteToken";
 import {EntityManager} from "typeorm";
-import {tokens} from "../../tokens";
 import {EventLoader} from "../../dataloaders/EventEntity";
 import {AuthenticatedContext} from "../../utils/context";
 import {Authenticated} from "../../decorators/Authenticated";
 import {InviteTokenLoader} from "../../dataloaders/TokenEntity";
-import {EventEntity} from "../../entities/EventEntity";
-import {PendingMembershipEntity} from "../../entities/PendingMembershipEntity";
+import {Event} from "../../entities/Event";
+import {PendingMembership} from "../../entities/PendingMembership";
 import {PendingMembershipLoader} from "../../dataloaders/PendingMembershipEntity";
+import {tokens} from "../../utils/container";
 
 @ObjectType()
 class User {
@@ -36,7 +36,7 @@ export default class UserQueries {
   }
   
   @Authenticated()
-  @FieldResolver(() => [InviteTokenEntity])
+  @FieldResolver(() => [InviteToken])
   async invites(
     @Ctx() ctx: AuthenticatedContext
   ) {
@@ -44,7 +44,7 @@ export default class UserQueries {
   }
   
   @Authenticated()
-  @FieldResolver(() => [EventEntity])
+  @FieldResolver(() => [Event])
   async events(
     @Ctx() ctx: AuthenticatedContext
   ) {
@@ -52,7 +52,7 @@ export default class UserQueries {
   }
   
   @Authenticated()
-  @FieldResolver(() => [PendingMembershipEntity])
+  @FieldResolver(() => [PendingMembership])
   async pendingMemberships(
     @Ctx() ctx: AuthenticatedContext
   ) {

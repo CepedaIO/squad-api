@@ -8,14 +8,17 @@
     "dev": "node -r ts-node/register -r dotenv/config --inspect=0.0.0.0:9229 src/index.ts",
     "watch": "nodemon",
     "build": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --inspect node_modules/.bin/jest --runInBand --watch"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/jest": "^29.1.2",
     "@types/luxon": "^2.3.2",
     "@types/node": "^17.0.21",
+    "jest": "^29.1.2",
     "nodemon": "^2.0.16",
+    "ts-jest": "^29.0.3",
     "ts-node": "^10.8.1",
     "tsc": "^2.0.4"
   },

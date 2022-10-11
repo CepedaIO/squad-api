@@ -1,5 +1,5 @@
 import {EntityManager, In} from "typeorm";
-import {MembershipEntity} from "../entities/MembershipEntity";
+import {Membership} from "../entities/Membership";
 import {Service} from "typedi";
 
 @Service()
@@ -9,7 +9,7 @@ export class MembershipService {
   ) {}
   
   async eventIdsFor(emails: string[]): Promise<number[]> {
-    const memberships = await this.manager.find(MembershipEntity, {
+    const memberships = await this.manager.find(Membership, {
       select: ['eventId'],
       where: { email: In(emails) }
     });
@@ -17,8 +17,8 @@ export class MembershipService {
     return memberships.map((membership) => membership.eventId);
   }
   
-  async membershipsFor(eventId: number, emails: string[]): Promise<Array<MembershipEntity | undefined>> {
-    const members = await this.manager.find(MembershipEntity, {
+  async membershipsFor(eventId: number, emails: string[]): Promise<Array<Membership | undefined>> {
+    const members = await this.manager.find(Membership, {
       where: {
         event: { id: eventId },
         email: In(emails)
@@ -29,7 +29,7 @@ export class MembershipService {
   }
   
   async isAdmin(eventId: number, email: string) : Promise<boolean> {
-    const membership = await this.manager.createQueryBuilder(MembershipEntity, 'm')
+    const membership = await this.manager.createQueryBuilder(Membership, 'm')
       .innerJoinAndSelect('m.permissions', 'p')
       .where('m.eventId = :eventId', { eventId })
       .andWhere('m.email = :email', { email })

@@ -1,25 +1,25 @@
 import {Arg, Ctx, FieldResolver, Query, Resolver, Root} from "type-graphql";
 import {ForbiddenError} from "apollo-server-errors";
-import {EventEntity} from "../../entities/EventEntity";
+import {Event} from "../../entities/Event";
 import {Authenticated} from "../../decorators/Authenticated";
 import {Inject, Service} from "typedi";
-import {MembershipEntity} from "../../entities/MembershipEntity";
+import {Membership} from "../../entities/Membership";
 import {AuthenticatedContext} from "../../utils/context";
 import {EntityManager} from "typeorm";
 import {AuthenticationError} from "apollo-server";
-import {JoinLinkEntity} from "../../entities/JoinTokenEntity";
+import {JoinLink} from "../../entities/JoinLink";
 import {EventLoader} from "../../dataloaders/EventEntity";
-import {tokens} from "../../tokens";
 import {JoinLinkLoader} from "../../dataloaders/TokenEntity";
 import {MembershipLoader} from "../../dataloaders/MembershipEntity";
-import {PendingMembershipEntity} from "../../entities/PendingMembershipEntity";
+import {PendingMembership} from "../../entities/PendingMembership";
 import {PendingMembershipLoader} from "../../dataloaders/PendingMembershipEntity";
-import {RangeForm} from "../../entities/AvailabilityEntity";
 import EventService from "../../services/EventService";
 import {DateTime, Interval} from "luxon";
+import {RangeForm} from "../GeneralResolver/models";
+import {tokens} from "../../utils/container";
 
 @Service()
-@Resolver(() => EventEntity)
+@Resolver(() => Event)
 export default class EventQueries {
   constructor(
     private manager: EntityManager,
@@ -31,13 +31,13 @@ export default class EventQueries {
   ) {}
 
   @Authenticated()
-  @Query(() => EventEntity, {
+  @Query(() => Event, {
     description: "Get all events for authenticated user"
   })
   async event(
     @Arg('id') id: number,
     @Ctx() ctx: AuthenticatedContext
-  ): Promise<EventEntity | undefined> {
+  ): Promise<Event | undefined> {
     const { email } = ctx;
     const isMember = await this.eventLoader.areMembers.load([id, email]);
     
@@ -48,13 +48,13 @@ export default class EventQueries {
     return this.eventLoader.byIds.load(id);
   }
   
-  @Query(() => EventEntity, {
+  @Query(() => Event, {
     description: "Get event for join link"
   })
   async eventFromJoinLink(
     @Arg('key') key: string
-  ): Promise<EventEntity> {
-    const link = await this.manager.findOneOrFail(JoinLinkEntity, {
+  ): Promise<Event> {
+    const link = await this.manager.findOneOrFail(JoinLink, {
       relations: ['event'],
       where: { key }
     });
@@ -66,26 +66,26 @@ export default class EventQueries {
     return link.event;
   }
   
-  @FieldResolver(() => [MembershipEntity])
+  @FieldResolver(() => [Membership])
   async admins(
-    @Root() event: EventEntity
-  ): Promise<MembershipEntity[]> {
+    @Root() event: Event
+  ): Promise<Membership[]> {
     const members = await this.membershipLoader.membersByEventIds.load(event.id);
     return members.filter((member) => member.permissions.isAdmin);
   }
   
-  @FieldResolver(() => [MembershipEntity])
+  @FieldResolver(() => [Membership])
   async memberships(
-    @Root() event: EventEntity
-  ): Promise<MembershipEntity[]> {
+    @Root() event: Event
+  ): Promise<Membership[]> {
     return this.membershipLoader.membersByEventIds.load(event.id);
   }
   
-  @FieldResolver(() => MembershipEntity)
+  @FieldResolver(() => Membership)
   async user(
-    @Root() event: EventEntity,
+    @Root() event: Event,
     @Ctx() ctx: AuthenticatedContext
-  ): Promise<MembershipEntity> {
+  ): Promise<Membership> {
     const members = await this.membershipLoader.membersByEventIds.load(event.id);
     return members.find((member) => member.email === ctx.email);
   }
@@ -93,7 +93,7 @@ export default class EventQueries {
   @Authenticated()
   @FieldResolver(() => String)
   async joinLink(
-    @Root() event: EventEntity,
+    @Root() event: Event,
   ): Promise<string> {
     const joinLinks = await this.joinLinkLoader.byEventId.load(event.id);
     const joinLink = joinLinks[0];
@@ -101,26 +101,10 @@ export default class EventQueries {
   }
   
   @Authenticated()
-  @FieldResolver(() => [PendingMembershipEntity])
+  @FieldResolver(() => [PendingMembership])
   async pendingMemberships(
-    @Root() event: EventEntity
-  ): Promise<PendingMembershipEntity[]> {
+    @Root() event: Event
+  ): Promise<PendingMembership[]> {
     return this.pendingMembershipLoader.byEventIds.load(event.id);
-  }
-  
-  @Authenticated()
-  @FieldResolver(() => [RangeForm], {
-    description: 'Calculation of all the intersections of availabilities with this event'
-  })
-  async availabilities (
-    @Root() event: EventEntity,
-    @Arg("start") start: Date,
-    @Arg("end") end: Date
-  ): Promise<RangeForm[]> {
-    const intervalScope = Interval.fromDateTimes(DateTime.fromJSDate(start), DateTime.fromJSDate(end));
-    const eventScope = event.intersection(intervalScope);
-    const intervals = await this.eventService.calculateAvailabilities(event.id, eventScope);
-    
-    return intervals.map((interval) => RangeForm.fromInterval(interval));
   }
 }
