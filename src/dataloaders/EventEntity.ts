@@ -1,6 +1,6 @@
 import DataLoader from "dataloader";
 import {EntityManager, In} from "typeorm";
-import {Event} from "../entities/Event";
+import {Event, EventResolution} from "../entities/Event";
 import {Membership} from "../entities/Membership";
 
 export type EventLoader = ReturnType<typeof createEventEntityLoaders>;
@@ -56,6 +56,13 @@ export const createEventEntityLoaders = (manager: EntityManager) => {
         memberships.filter((membership) => membership.email === email)
           .map((membership) => events.find((event) => event.id === membership.eventId))
       );
+    }),
+    getResolutions: new DataLoader(async (eventIds: number[]) => {
+      const resolutions = await manager.find(EventResolution, {
+        where: {eventId: In(eventIds)}
+      });
+      
+      return eventIds.map((eventId) => resolutions.find((resolution) => resolution.eventId === eventId));
     })
   };
   

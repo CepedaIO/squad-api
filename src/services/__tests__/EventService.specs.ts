@@ -94,4 +94,61 @@ describe('EventService - getAvailabilityIntervals', function() {
     expect(memberIntervals[0].start).toEqual(DateTime.fromObject({ hour: 9 }));
     expect(memberIntervals[0].end).toEqual(DateTime.fromObject({ hour: 11 }));
   });
+  
+  it.only('should be correct', function() {
+    const intervals = [
+      [
+        {
+          "s": "2022-10-02T00:00:00.000-04:00",
+          "e": "2022-10-11T23:59:00.000-04:00",
+          "invalid": null,
+          "isLuxonInterval": true
+        }
+      ],
+      [
+        {
+          "s": "2022-10-04T00:00:00.000-04:00",
+          "e": "2022-10-13T23:59:00.000-04:00",
+          "invalid": null,
+          "isLuxonInterval": true
+        }
+      ],
+      [
+        {
+          "s": "2022-10-06T00:00:00.000-04:00",
+          "e": "2022-10-15T23:59:00.000-04:00",
+          "invalid": null,
+          "isLuxonInterval": true
+        }
+      ],
+      [
+        {
+          "s": "2022-10-08T00:00:00.000-04:00",
+          "e": "2022-10-17T23:59:00.000-04:00",
+          "invalid": null,
+          "isLuxonInterval": true
+        }
+      ]
+    ].map((member) =>
+      member.map((part) =>
+        Interval.fromDateTimes(
+          DateTime.fromISO(part.s),
+          DateTime.fromISO(part.e)
+        )
+      )
+    );
+    
+    const result = eventService.reduceMembershipIntervals(
+      Duration.fromDurationLike({ hour: 1 }),
+      intervals
+    );
+    
+    result.forEach((part) => {
+      console.log(
+        part.start.toLocaleString(DateTime.DATE_SHORT),
+        ' -> ',
+        part.end.toLocaleString(DateTime.DATE_SHORT),
+      )
+    });
+  });
 });

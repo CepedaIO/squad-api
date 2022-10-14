@@ -1,6 +1,6 @@
 import {Arg, Ctx, FieldResolver, Query, Resolver, Root} from "type-graphql";
 import {ForbiddenError} from "apollo-server-errors";
-import {Event} from "../../entities/Event";
+import {Event, EventResolution} from "../../entities/Event";
 import {Authenticated} from "../../decorators/Authenticated";
 import {Inject, Service} from "typedi";
 import {Membership} from "../../entities/Membership";
@@ -106,5 +106,13 @@ export default class EventQueries {
     @Root() event: Event
   ): Promise<PendingMembership[]> {
     return this.pendingMembershipLoader.byEventIds.load(event.id);
+  }
+  
+  @Authenticated()
+  @FieldResolver(() => EventResolution, { nullable: true })
+  async resolution(
+    @Root() event: Event
+  ): Promise<EventResolution | null> {
+    return this.eventLoader.getResolutions.load(event.id);
   }
 }

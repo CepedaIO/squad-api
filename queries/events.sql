@@ -13,4 +13,9 @@ DELETE FROM events WHERE id IN (SELECT event_id FROM memberships m WHERE m.email
 SELECT event_id FROM "memberships" "m" WHERE "m"."email" IN ('cypress@cepeda.io');
 
 SELECT *
-FROM pending_memberships
+FROM pending_memberships;
+
+SELECT *
+FROM event_resolutions;
+
+TRUNCATE event_resolutions;

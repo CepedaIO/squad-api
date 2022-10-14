@@ -2,8 +2,7 @@ import {Column, Entity} from "typeorm";
 import {Field, ObjectType} from "type-graphql";
 import {MutEntity} from "./BaseEntity";
 import {IPendingMembershipEntity, IAvailabilityBase, Demote} from "event-matcher-shared";
-import {promote} from "../utils/shared-shim";
-import {MemberAvailability} from "./MemberAvailability";
+import {JSONColumn} from "../utils/typeorm";
 
 @ObjectType()
 @Entity('pending_memberships')
@@ -19,11 +18,6 @@ export class PendingMembership extends MutEntity implements IPendingMembershipEn
   @Column()
   eventId: number;
   
-  @Column('jsonb', {
-    transformer: {
-      to: (value: MemberAvailability[]) => value,
-      from: (value: Demote<MemberAvailability>[]) => promote(value)
-    }
-  })
-  availabilities: MemberAvailability[];
+  @Column(JSONColumn)
+  availabilities: IAvailabilityBase[];
 }

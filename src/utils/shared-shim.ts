@@ -31,11 +31,12 @@ export const promote = <T>(entity: Demote<T> | T): T => {
 
 export interface IAvailabilityUtils<AvailabilityType extends IAvailabilityBase> {
   applies: (form: any) => form is AvailabilityType;
-  intervalsFor: (duration:Duration, scope: Interval, form: AvailabilityType) => Interval[]
+  intervalsFor: (duration:Duration, scope: Interval, form: AvailabilityType) => Interval[];
 }
 
 export const RangeUtils: IAvailabilityUtils<IRangeForm> = {
   applies: ist<IRangeForm>((obj) => DateTime.isDateTime(obj.start) && DateTime.isDateTime(obj.end)),
+  
   intervalsFor: (duration:Duration, scope: Interval, form: IRangeForm) => {
     const interval = Interval.fromDateTimes(form.start, form.end).intersection(scope);
     

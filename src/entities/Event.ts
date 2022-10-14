@@ -1,8 +1,8 @@
-import {Column, Entity, JoinColumn, ManyToOne, OneToMany} from "typeorm";
+import {Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne} from "typeorm";
 import {Field, ObjectType} from "type-graphql";
 import {MutEntity} from "./BaseEntity";
 import {Membership} from "./Membership";
-import {IEventEntity, IAvailabilityEntity} from "event-matcher-shared";
+import {IEventEntity, IAvailabilityEntity, IEventResolutionEntity} from "event-matcher-shared";
 import {InviteToken} from "./InviteToken";
 import {JoinLink} from "./JoinLink";
 import {DateTime} from "luxon";
@@ -92,6 +92,30 @@ export class EventAvailability extends MutEntity implements IAvailabilityEntity 
   eventId: number;
   
   @ManyToOne(
+    () => Event,
+    event => event.availabilities,
+    { nullable:false, onDelete:'CASCADE' }
+  )
+  @JoinColumn()
+  event: Event;
+}
+
+@ObjectType()
+@Entity('event_resolutions')
+export class EventResolution extends MutEntity implements IEventResolutionEntity {
+  @Field()
+  @Column(DateTimeColumn)
+  start: DateTime;
+  
+  @Field()
+  @Column(DateTimeColumn)
+  end: DateTime;
+  
+  @Column()
+  @Field()
+  eventId: number;
+  
+  @OneToOne(
     () => Event,
     event => event.availabilities,
     { nullable:false, onDelete:'CASCADE' }

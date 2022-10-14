@@ -17,7 +17,7 @@ export default class EventService {
   
   async calculateEventMemberIntervals(eventId: number, start: Date, end: Date) {
     const memberships = await this.membershipLoader.membersByEventIds.load(eventId);
-    const memberAvailabilities = memberships.map((membership) => membership.availabilities);
+    const memberAvailabilities = memberships.map((membership) => membership.availabilities.map((availability) => ({ start: availability.start, end: availability.end })));
     const event = await this.eventLoader.byIds.load(eventId);
     const scope = Interval.fromDateTimes(start, end);
     const duration = Duration.fromDurationLike(event.duration);
@@ -29,7 +29,7 @@ export default class EventService {
   
   reduceMembershipIntervals(duration: Duration, membershipIntervals: Interval[][]): Interval[] {
     const startMembership = membershipIntervals.pop();
-    return membershipIntervals.slice(-1).reduce((intervals, membershipIntervals) => {
+    return membershipIntervals.reduce((intervals, membershipIntervals) => {
       return intervals.reduce((finalIntervals, interval) => {
         const subIntervals = AvailabilityUtils.intervalsFor(duration, interval, membershipIntervals)
         return finalIntervals.concat(subIntervals)
@@ -42,7 +42,7 @@ export default class EventService {
       const subIntervals = memberAvailabilities.map((availabilities) =>
         AvailabilityUtils.intervalsFor(duration, eventScope, availabilities)
       );
-    
+
       return intervals.map((memberInterval, index) => memberInterval.concat(subIntervals[index]));
     }, memberAvailabilities.map(() => []))
   

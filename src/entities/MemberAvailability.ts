@@ -28,4 +28,6 @@ export class MemberAvailability extends MutEntity implements IAvailabilityEntity
   )
   @JoinColumn()
   membership: Membership;
+  
+  to
 }

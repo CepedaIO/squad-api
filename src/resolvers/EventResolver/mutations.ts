@@ -1,11 +1,11 @@
-import {Service} from "typedi";
+import {Inject, Service} from "typedi";
 import {Arg, Ctx, Mutation, Resolver} from "type-graphql";
 import {EntityManager} from "typeorm";
 import {MembershipService} from "../../services/MembershipService";
 import {HTMLService} from "../../services/HTMLService";
 import {TokenService} from "../../services/TokenService";
 import {Authenticated} from "../../decorators/Authenticated";
-import {Event, EventAvailability} from "../../entities/Event";
+import {Event, EventAvailability, EventResolution} from "../../entities/Event";
 import {AcceptEventInput, CreateEventInput, InviteMemberInput} from "./models";
 import {AuthenticatedContext, Context} from "../../utils/context";
 import {Membership} from "../../entities/Membership";
@@ -21,6 +21,8 @@ import {DateTime} from "luxon";
 import {providers} from "../../providers";
 import {appConfig} from "../../configs/app";
 import {JoinLink} from "../../entities/JoinLink";
+import {tokens} from "../../utils/container";
+import {EventLoader} from "../../dataloaders/EventEntity";
 
 @Service()
 @Resolver()
@@ -29,7 +31,8 @@ export default class EventMutations {
     private manager: EntityManager,
     private membershipService: MembershipService,
     private htmlService: HTMLService,
-    private tokenService: TokenService
+    private tokenService: TokenService,
+    @Inject(tokens.EventLoader) private eventLoader: EventLoader
   ) {}
   
   @Authenticated()
@@ -70,7 +73,7 @@ export default class EventMutations {
   }
   
   @Mutation(() => SimpleResponse, {
-    description: 'Adds user to event and returns authenticated session'
+    description: 'Accepts invite and adds user to event'
   })
   async acceptInvite(
     @Arg('payload') payload: AcceptEventInput,
@@ -86,7 +89,6 @@ export default class EventMutations {
       throw new AuthenticationError('Was unable to join event');
     }
     
-    await this.manager.delete(InviteToken, pick(invite, 'id'));
     await this.manager.save(Membership, {
       email: invite.email,
       displayName,
@@ -94,6 +96,8 @@ export default class EventMutations {
       availabilities: availabilities.map((form) => this.manager.create(MemberAvailability, form)),
       permissions: this.manager.create(MembershipPermission, { isAdmin: false })
     });
+  
+    await this.manager.delete(InviteToken, pick(invite, 'id'));
     
     return {
       success: true,
@@ -158,46 +162,36 @@ export default class EventMutations {
   }
   
   @Authenticated()
-  @Mutation(() => JoinLink, {
-    description: 'Create a join link for anyone to join the event with'
-  })
-  async createJoinLink(
-    @Arg('eventId') eventId: number,
-    @Arg('message') message: string,
-    @Ctx() ctx: AuthenticatedContext
-  ): Promise<JoinLink> {
-    const { email } = ctx;
-    const isAdmin = await this.membershipService.isAdmin(eventId, email);
-    
-    if(!isAdmin) {
-      throw new ForbiddenError('You must be the admin of this event');
-    }
-    
-    const event = await this.manager.findOneOrFail(Event, {
-      id: eventId
-    });
-    return this.tokenService.createJoinLink(event, message);
-  }
-  
-  @Authenticated()
   @Mutation(() => SimpleResponse, {
-    description: ''
+    description: 'Accept and publish the final times for an event'
   })
-  async deleteJoinToken(
-    @Arg('uuid') uuid: string,
-    @Arg('key') key: string,
+  async publishEventTime(
+    @Arg('eventId') eventId: number,
+    @Arg('start') start: DateTime,
+    @Arg('end') end: DateTime,
     @Ctx() ctx: AuthenticatedContext
   ): Promise<SimpleResponse> {
-    const token = await this.manager.findOne(JoinLink, { key });
-    if(!token) {
-      throw new UserInputError(`Invalid token`);
+    const isAdmin = await this.eventLoader.areAdmins.load([eventId, ctx.email]);
+    
+    if(!isAdmin) {
+      throw new ForbiddenError('Must be admin of that event');
     }
     
-    await this.manager.delete(JoinLink, token);
+    const resolution = await this.eventLoader.getResolutions.load(eventId);
+    
+    if(resolution) {
+      throw new UserInputError('Resolution already exists for that event');
+    }
+    
+    await this.manager.save(EventResolution, this.manager.create(EventResolution, {
+      eventId,
+      start,
+      end
+    }));
     
     return {
       success: true,
-      result: 'The link is no more...'
+      result: 'Resolution for event saved!'
     };
   }
 }
