@@ -21,6 +21,9 @@ export class CreateEventInput implements ICreateEventInput {
   @Field()
   displayName: string;
   
+  @Field()
+  anytime: boolean;
+
   @Field(() => [AvailabilityForm])
   availabilities: AvailabilityForm[];
   

@@ -21,7 +21,7 @@ export default class EventService {
     const event = await this.eventLoader.byIds.load(eventId);
     const scope = Interval.fromDateTimes(start, end);
     const duration = Duration.fromDurationLike(event.duration);
-    const eventIntervals = AvailabilityUtils.intervalsFor(duration, scope, event.availabilities);
+    const eventIntervals = event.anytime ? [scope] : AvailabilityUtils.intervalsFor(duration, scope, event.availabilities);
     
     const membershipIntervals = this.getAllMembershipIntervals(duration, eventIntervals, memberAvailabilities);
     return this.reduceMembershipIntervals(duration, membershipIntervals);
