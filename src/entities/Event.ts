@@ -30,7 +30,9 @@ export class Event extends MutEntity implements IEventEntity {
   @Column()
   factor: number;
   
-  @Column()
+  @Column({
+    default: true
+  })
   anytime: boolean;
 
   @OneToMany(
