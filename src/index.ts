@@ -25,6 +25,7 @@ import JoinLinkMutations from "./resolvers/JoinLinkResolver/mutations";
 import PendingMembershipQueries from "./resolvers/PendingMembershipResolver/queries";
 import PendingMembershipMutations from "./resolvers/PendingMembershipResolver/mutations";
 import GeneralQueries from "./resolvers/GeneralResolver/queries";
+import path from "path";
 
 (async () => {
   console.log('Is Prod?', appConfig.isProd);
@@ -71,6 +72,15 @@ import GeneralQueries from "./resolvers/GeneralResolver/queries";
   server.applyMiddleware({ app });
   
   const hostname = appConfig.isProd ? 'graph.cepeda.io' : 'localhost';
+  const clientPath = path.join(__dirname, '../../client', 'docs');
+  console.log('Client path:', clientPath);
+  app.use(express.static(path.join(clientPath)));
+  app.get('/*', (req, res) => {
+    res.sendFile(
+      path.join(clientPath, 'index.html')
+    );
+  });
+  
   if(appConfig.isProd) {
     const httpsServer = https.createServer({
       key: fs.readFileSync(`./certs/privkey.pem`, 'utf-8'),
@@ -82,13 +92,13 @@ import GeneralQueries from "./resolvers/GeneralResolver/queries";
     );
   
     console.log(`🚀 Server ready at https://${hostname}${ server.graphqlPath }`);
+  } else {
+    const httpServer = http.createServer(app);
+  
+    await new Promise<void>(resolve =>
+      httpServer.listen(8100, resolve)
+    );
+    
+    console.log(`🚀 Server ready at http://${hostname}${ server.graphqlPath }`);
   }
-  
-  const httpServer = http.createServer(app);
-  
-  await new Promise<void>(resolve =>
-    httpServer.listen(8100, resolve)
-  );
-
-  console.log(`🚀 Server ready at http://${hostname}${ server.graphqlPath }`);
 })()
