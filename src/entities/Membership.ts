@@ -26,7 +26,7 @@ export class Membership extends MutEntity implements IMembershipEntity {
     { nullable: false, onDelete:'CASCADE' }
   )
   event: Event;
-
+  
   @OneToOne(
     () => MembershipPermission,
     permissions => permissions.membership,

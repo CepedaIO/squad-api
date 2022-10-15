@@ -6,7 +6,7 @@ export type MembershipLoader = ReturnType<typeof createMembershipEntityLoaders>;
 export const createMembershipEntityLoaders = (manager:EntityManager) => ({
   membersByEventIds: new DataLoader(async (eventIds: number[]) => {
     const memberships = await manager.find(Membership, {
-      where: {eventId: In(eventIds)}
+      where: { eventId: In(eventIds) }
     });
     
     return eventIds.map((eventId) =>

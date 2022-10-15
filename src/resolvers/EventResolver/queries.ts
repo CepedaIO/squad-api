@@ -85,7 +85,9 @@ export default class EventQueries {
     @Ctx() ctx: AuthenticatedContext
   ): Promise<Membership> {
     const members = await this.membershipLoader.membersByEventIds.load(event.id);
-    return members.find((member) => member.email === ctx.email);
+    const membership = members.find((member) => member.email === ctx.email);
+    console.log('Is Admin?', membership.permissions.isAdmin);
+    return membership;
   }
 
   @Authenticated()

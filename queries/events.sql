@@ -1,6 +1,6 @@
 SELECT * FROM memberships;
 
-SELECT m.display_name, m.event_id, mp.*
+SELECT m.display_name, m.event_id, m.email, mp.*
 FROM membership_permissions mp
 INNER JOIN memberships m on mp.membership_id = m.id;
 
