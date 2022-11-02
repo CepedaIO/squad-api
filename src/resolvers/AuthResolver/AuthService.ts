@@ -7,10 +7,10 @@ import {Service} from "typedi";
 import {SimpleResponse} from "../SimpleResponse";
 import {EntityManager} from "typeorm";
 import {HTMLService} from "../../services/HTMLService";
-import {providers} from "../../providers";
 import {registerEnumType} from "type-graphql";
 import SessionService from "../../services/SessionService";
 import {createKey} from "../../utils/bag";
+import {Transporter} from "nodemailer";
 
 export enum SessionExpiration {
   ONE_HOUR,
@@ -27,7 +27,8 @@ export default class AuthService {
   constructor(
     private manager: EntityManager,
     private htmlService: HTMLService,
-    private sessionService: SessionService
+    private sessionService: SessionService,
+    private emailer: Transporter
   ) {}
 
   async getNewToken(email: string): Promise<SimpleResponse> {
@@ -53,10 +54,8 @@ export default class AuthService {
       key: createKey(),
       session
     });
-
-    const emailer = providers.emailerFor(email);
-    const { fromNoReply } = appConfig;
-    await emailer.sendMail({
+    
+    await this.emailer.sendMail({
       from: appConfig.fromNoReply,
       to: email,
       subject: 'Login request to CepedaIO/Squad!',

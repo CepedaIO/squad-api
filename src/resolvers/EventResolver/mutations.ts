@@ -18,11 +18,11 @@ import {pick} from "lodash";
 import {ForbiddenError} from "apollo-server-errors";
 import {createKey} from "../../utils/bag";
 import {DateTime} from "luxon";
-import {providers} from "../../providers";
 import {appConfig} from "../../configs/app";
 import {JoinLink} from "../../entities/JoinLink";
 import {tokens} from "../../utils/container";
 import {EventLoader} from "../../dataloaders/EventEntity";
+import {Transporter} from "nodemailer";
 
 @Service()
 @Resolver()
@@ -32,7 +32,8 @@ export default class EventMutations {
     private membershipService: MembershipService,
     private htmlService: HTMLService,
     private tokenService: TokenService,
-    @Inject(tokens.EventLoader) private eventLoader: EventLoader
+    @Inject(tokens.EventLoader) private eventLoader: EventLoader,
+    @Inject(tokens.Transporter) private emailer: Transporter
   ) {}
   
   @Authenticated()
@@ -147,8 +148,7 @@ export default class EventMutations {
       expiresOn: DateTime.now().plus({days: 3})
     });
     
-    const emailer = providers.emailerFor(email);
-    await emailer.sendMail({
+    await this.emailer.sendMail({
       from: appConfig.fromNoReply,
       to: email,
       subject: 'You have been invited!',

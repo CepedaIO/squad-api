@@ -1,14 +1,29 @@
-import { env } from 'node:process';
+import './environments';
+import {env} from 'node:process';
 import {SnakeNamingStrategy} from "typeorm-naming-strategies";
 import {ConnectionOptions} from "typeorm";
+import AuthResolver from "../resolvers/AuthResolver";
+import UserQueries from "../resolvers/UserResolver/queries";
+import EventQueries from "../resolvers/EventResolver/queries";
+import EventMutations from "../resolvers/EventResolver/mutations";
+import MembershipQueries from "../resolvers/MembershipResolver/queries";
+import InviteTokenQueries from "../resolvers/InviteResolver/queries";
+import JoinLinkQueries from "../resolvers/JoinLinkResolver/queries";
+import JoinLinkMutations from "../resolvers/JoinLinkResolver/mutations";
+import PendingMembershipQueries from "../resolvers/PendingMembershipResolver/queries";
+import PendingMembershipMutations from "../resolvers/PendingMembershipResolver/mutations";
+import GeneralQueries from "../resolvers/GeneralResolver/queries";
+import {NonEmptyArray} from "type-graphql";
+import {Environments, NODE_ENV} from "./environments";
+import {createTransport} from "nodemailer";
+import {tokens} from "../utils/container";
+import {Container} from "typedi";
 
-const isProd = env.NODE_ENV === 'production';
-const isDev = !isProd;
-const entities = isProd ? 'dist/entities/**/**.{js,ts}' : 'src/entities/**/**.{js,ts}'
+const entities = NODE_ENV === Environments.PROD ? 'dist/entities/**/**.{js,ts}' : 'src/entities/**/**.{js,ts}';
 
 let typeorm: ConnectionOptions = {
   type: 'postgres',
-  logging: isDev,
+  logging: NODE_ENV !== Environments.PROD,
   synchronize: true,
   entities:  [ entities ],
   namingStrategy: new SnakeNamingStrategy(),
@@ -21,34 +36,28 @@ let typeorm: ConnectionOptions = {
 
 export const appConfig = {
   typeorm,
-  isProd,
-  isDev,
   port: env.SERVER_PORT || 8100,
-  origin: '',
-  jwtSecret: 'w7%/L$0UE~9ukMWwA[FM%+bt:5]tKV',
-  fromNoReply: 'no-reply@cepeda.io',
-  emailer: {
-    user: env.EMAILER_USER,
-    pass: env.EMAILER_PASS
-  },
-  testUsers: null,
-  testMailer: null
+  hostname: env.HOSTNAME,
+  clientURL: env.CLIENT_URL,
+  jwtSecret: env.JWT_SECRET,
+  fromNoReply: env.NO_REPLY_ADDRESS,
+  resolvers: [
+    AuthResolver, UserQueries,
+    EventQueries, EventMutations,
+    MembershipQueries,
+    InviteTokenQueries,
+    JoinLinkQueries, JoinLinkMutations,
+    PendingMembershipQueries, PendingMembershipMutations,
+    GeneralQueries
+  ] as NonEmptyArray<Function>,
+  transporter: createTransport({
+    service: 'gmail',
+    auth: {
+      user: env.EMAILER_USER,
+      pass: env.EMAILER_PASS
+    }
+  })
 };
 
-if(isDev) {
-  appConfig.testUsers = [
-    'cypress@cepeda.io',
-    'cypress-invited@cepeda.io',
-    'cypress-invited2@cepeda.io',
-    'join-user@cepeda.io',
-    'apollo@cepeda.io',
-    'test@cepeda.io'
-  ];
-
-  appConfig.testMailer = {
-    host: 'localhost',
-    port: 7777,
-  };
-}
-
-appConfig.origin = isProd ? 'https://squad.cepeda.io': `http://localhost:3100`;
+console.log('Is Prod?', NODE_ENV === Environments.PROD);
+console.log('Typeorm:', appConfig.typeorm);

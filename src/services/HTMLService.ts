@@ -15,7 +15,7 @@ export class HTMLService {
   private horizontalItem = 'margin-bottom:10px;display:inline-block';
 
   login(login: LoginTokenEntity) {
-    const url = new URL(appConfig.origin)
+    const url = new URL(appConfig.clientURL)
     url.pathname = join('login-with', login.uuid, login.key);
     const link = url.toString();
 
@@ -52,7 +52,7 @@ export class HTMLService {
   }
 
   invite(invite: InviteToken, from:string, message: string) {
-    const url = new URL(appConfig.origin)
+    const url = new URL(appConfig.clientURL)
     const event = invite.event;
     url.pathname = join('event', event.id.toString(), 'invite', invite.uuid, invite.key);
     const link = url.toString();

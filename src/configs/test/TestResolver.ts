@@ -1,13 +1,14 @@
 import {Service} from "typedi";
 import {Arg, Mutation, Resolver} from "type-graphql";
-import {SimpleResponse} from "./SimpleResponse";
+import {SimpleResponse} from "../../resolvers/SimpleResponse";
 import {EntityManager, In} from "typeorm";
-import {appConfig} from "../configs/app";
-import {Membership} from "../entities/Membership";
-import {Event} from "../entities/Event";
-import SessionService from "../services/SessionService";
+import {appConfig} from "../app";
+import {Membership} from "../../entities/Membership";
+import {Event} from "../../entities/Event";
+import SessionService from "../../services/SessionService";
 import {AuthenticationError} from "apollo-server";
-import {Session} from "../entities/Session";
+import {Session} from "../../entities/Session";
+import {TestSession} from "./index";
 
 @Service()
 @Resolver()
@@ -21,6 +22,19 @@ export class TestResolver {
     description: 'Delete all data created by test users'
   })
   async deleteTestData(): Promise<SimpleResponse> {
+    const testSessions = await this.manager.find(TestSession, {
+      relations: ['session']
+    });
+    
+    if(testSessions.length === 0) {
+      return {
+        success: true,
+        result: `Deleted 0 events and 0 sessions`
+      }
+    }
+    
+    const emails = testSessions.map((test) => test.session.email);
+    
     const eventResult = await this.manager.createQueryBuilder(Event, 'e')
       .delete()
       .where(() => `id IN (${
@@ -30,13 +44,16 @@ export class TestResolver {
           .getQuery()
         })`
       )
-      .setParameters({
-        emails: appConfig.testUsers
-      })
+      .setParameters({ emails })
       .execute();
     
     const sessionResult = await this.manager.delete(Session, {
-      email: In(appConfig.testUsers)
+      email: In(emails)
+    });
+    
+    const ids = testSessions.map((test) => test.id);
+    await this.manager.delete(TestSession, {
+      id: In(ids)
     });
     
     return {
@@ -51,14 +68,12 @@ export class TestResolver {
   async loginTestUser(
     @Arg('email') email: string
   ): Promise<SimpleResponse> {
-    if(!appConfig.testUsers.includes(email)) {
-      throw new AuthenticationError('Can only log in test users this way');
-    }
-    
     const session = await this.sessionService.createShortSession(email, true);
+    await this.manager.insert(TestSession, { session });
+    
     return {
       success: true,
-      result: await  this.sessionService.toJWT(session)
+      result: await this.sessionService.toJWT(session)
     };
   }
 }

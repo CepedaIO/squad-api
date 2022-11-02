@@ -1,7 +1,6 @@
 import {Arg, Ctx, Int, Mutation, Query, Resolver} from "type-graphql";
 import {SimpleResponse} from "../SimpleResponse";
 import {Context, isAuthenticatedContext} from "../../utils/context";
-import {DevOnly} from "../../decorators/DevOnly";
 import {Service} from "typedi";
 import AuthService, {SessionExpiration} from "./AuthService";
 import {Transaction} from "../../decorators/Transaction";
@@ -31,14 +30,6 @@ export default class AuthResolver {
     @Arg("expires", () => Int) expires: SessionExpiration,
   ): Promise<SimpleResponse> {
     return this.authService.useLoginToken(uuid, key, expires)
-  }
-
-  @DevOnly()
-  @Mutation(() => SimpleResponse)
-  async getNewToken(
-    @Arg('email') email: string
-  ): Promise<SimpleResponse> {
-    return this.authService.getNewToken(email.toLowerCase());
   }
 
   @Transaction()

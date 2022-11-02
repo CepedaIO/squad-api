@@ -1,21 +1,15 @@
-SELECT * FROM memberships;
-
-SELECT m.display_name, m.event_id, m.email, mp.*
-FROM membership_permissions mp
-INNER JOIN memberships m on mp.membership_id = m.id;
-
-SELECT * FROM availabilities;
-
-SELECT * FROM events;
-TRUNCATE events CASCADE ;
-DELETE FROM events WHERE id IN (SELECT event_id FROM memberships m WHERE m.email IN ('test@cypress.io'));
-
-SELECT event_id FROM "memberships" "m" WHERE "m"."email" IN ('cypress@cepeda.io');
+SELECT *
+FROM sessions;
 
 SELECT *
-FROM pending_memberships;
+FROM test_sessions;
 
 SELECT *
-FROM event_resolutions;
+FROM events;
 
-TRUNCATE event_resolutions;
+SELECT *
+FROM memberships
+WHERE event_id=100;
+
+TRUNCATE sessions CASCADE ;
+

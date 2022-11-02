@@ -3,9 +3,9 @@ import {Session} from "../entities/Session";
 import {pick} from "lodash";
 import {DateTime} from "luxon";
 import {ContainerInstance} from "typedi";
-import {appConfig} from "../configs/app";
 import {getConnection} from "typeorm";
 import {createContainer} from "./container";
+import {Environments, NODE_ENV} from "../configs/environments";
 
 export interface Context {
   container: ContainerInstance;
@@ -37,16 +37,6 @@ const context = async ({ req }): Promise<Context | SessionContext> => {
   const context:Context = {
     container: createContainer(requestId.toString(), manager)
   };
-
-  if(appConfig.isDev && appConfig.testUsers.includes(auth)) {
-    return {
-      ...context,
-      uuid: auth,
-      key: auth,
-      email: auth.toLowerCase(),
-      authenticated: true
-    };
-  }
 
   if(auth) {
     try {

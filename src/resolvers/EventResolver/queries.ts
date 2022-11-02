@@ -86,7 +86,6 @@ export default class EventQueries {
   ): Promise<Membership> {
     const members = await this.membershipLoader.membersByEventIds.load(event.id);
     const membership = members.find((member) => member.email === ctx.email);
-    console.log('Is Admin?', membership.permissions.isAdmin);
     return membership;
   }
 
