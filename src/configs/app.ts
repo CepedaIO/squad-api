@@ -37,8 +37,8 @@ let typeorm: ConnectionOptions = {
 export const appConfig = {
   typeorm,
   port: env.SERVER_PORT || 8100,
-  hostname: env.HOSTNAME,
-  clientURL: env.CLIENT_URL,
+  hostname: env.HOSTNAME || 'localhost',
+  clientURL: env.CLIENT_URL || 'http://localhost:3100',
   jwtSecret: env.JWT_SECRET,
   fromNoReply: env.NO_REPLY_ADDRESS,
   resolvers: [
