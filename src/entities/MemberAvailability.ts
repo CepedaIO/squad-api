@@ -2,7 +2,7 @@ import {Field, ObjectType} from "type-graphql";
 import {Column, Entity, JoinColumn, ManyToOne} from "typeorm";
 import {MutEntity} from "./BaseEntity";
 import {Membership} from "./Membership";
-import {IAvailabilityEntity} from "event-matcher-shared";
+import {IAvailabilityEntity} from "squad-shared";
 import {DateTime} from "luxon";
 import {DateTimeColumn} from "../utils/typeorm";
 

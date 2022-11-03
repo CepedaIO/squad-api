@@ -2,7 +2,7 @@ import {MutEntity} from "./BaseEntity";
 import {Column, Entity, JoinColumn, OneToOne} from "typeorm";
 import {Field, InputType, ObjectType} from "type-graphql";
 import {Membership} from "./Membership";
-import {IMembershipPermissionsEntity} from "event-matcher-shared";
+import {IMembershipPermissionsEntity} from "squad-shared";
 
 @ObjectType('MembershipPermissionOut')
 @InputType('MembershipPermissionIn')

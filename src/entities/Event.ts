@@ -2,7 +2,7 @@ import {Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne} from "typeor
 import {Field, ObjectType} from "type-graphql";
 import {MutEntity} from "./BaseEntity";
 import {Membership} from "./Membership";
-import {IEventEntity, IAvailabilityEntity, IEventResolutionEntity} from "event-matcher-shared";
+import {IEventEntity, IAvailabilityEntity, IEventResolutionEntity} from "squad-shared";
 import {InviteToken} from "./InviteToken";
 import {JoinLink} from "./JoinLink";
 import {DateTime} from "luxon";

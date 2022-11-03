@@ -1,5 +1,5 @@
 import {DateTime, Duration, Interval} from "luxon";
-import {Demote, IAvailabilityBase, IRangeForm} from "event-matcher-shared";
+import {Demote, IAvailabilityBase, IRangeForm} from "squad-shared";
 
 /**
  * This is functionality ported over from squad-shared because Node doesn't support ESM

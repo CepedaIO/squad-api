@@ -5,7 +5,7 @@ import {MembershipLoader} from "../dataloaders/MembershipEntity";
 import {Duration, Interval} from "luxon";
 import {AvailabilityUtils} from "../utils/shared-shim";
 import {tokens} from "../utils/container";
-import {IAvailabilityBase} from "event-matcher-shared";
+import {IAvailabilityBase} from "squad-shared";
 
 @Service()
 export default class EventService {

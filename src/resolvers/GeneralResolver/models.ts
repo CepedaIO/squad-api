@@ -1,6 +1,6 @@
 import {Field, InputType, ObjectType} from "type-graphql";
 import {DateTime, Interval} from "luxon";
-import {IRangeForm, IAvailabilityBase} from "event-matcher-shared"
+import {IRangeForm, IAvailabilityBase} from "squad-shared"
 
 @ObjectType()
 export class RangeForm implements IRangeForm {

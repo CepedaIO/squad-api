@@ -1,7 +1,7 @@
 import {Field, InputType} from "type-graphql";
 import {Duration} from "../Duration";
 import {MemberAvailability} from "../../entities/MemberAvailability";
-import {ICreateEventInput, IInviteMemberInput} from "event-matcher-shared";
+import {ICreateEventInput, IInviteMemberInput} from "squad-shared";
 import {AvailabilityForm} from "../GeneralResolver/models";
 
 @InputType()

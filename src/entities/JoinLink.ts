@@ -5,7 +5,7 @@ import {Event} from "./Event";
 import {DateTime} from "luxon";
 import {DateTimeColumn} from "../utils/typeorm";
 import path from "path";
-import {IJoinLinkEntity} from "event-matcher-shared";
+import {IJoinLinkEntity} from "squad-shared";
 
 @ObjectType()
 @Entity('join_links')

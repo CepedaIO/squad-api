@@ -4,7 +4,7 @@ import {Field, ObjectType} from "type-graphql";
 import {Event} from "./Event";
 import {DateTime} from "luxon";
 import {DateTimeColumn} from "../utils/typeorm";
-import {IInviteTokenEntity} from "event-matcher-shared"
+import {IInviteTokenEntity} from "squad-shared"
 
 @ObjectType()
 @Entity('invite_tokens')

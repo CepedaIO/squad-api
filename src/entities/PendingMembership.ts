@@ -1,7 +1,7 @@
 import {Column, Entity} from "typeorm";
 import {Field, ObjectType} from "type-graphql";
 import {MutEntity} from "./BaseEntity";
-import {IPendingMembershipEntity, IAvailabilityBase, Demote} from "event-matcher-shared";
+import {IPendingMembershipEntity, IAvailabilityBase, Demote} from "squad-shared";
 import {JSONColumn} from "../utils/typeorm";
 
 @ObjectType()

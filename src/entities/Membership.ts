@@ -4,7 +4,7 @@ import {MutEntity} from "./BaseEntity";
 import {MemberAvailability} from "./MemberAvailability";
 import {Event} from "./Event";
 import {MembershipPermission} from "./MembershipPermission";
-import {IMembershipEntity} from "event-matcher-shared";
+import {IMembershipEntity} from "squad-shared";
 
 @ObjectType()
 @Entity('memberships')
