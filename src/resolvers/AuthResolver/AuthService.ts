@@ -3,7 +3,7 @@ import {Session} from "../../entities/Session";
 import {pick} from "lodash";
 import {LoginTokenEntity} from "../../entities/LoginTokenEntity";
 import {appConfig} from "../../configs/app";
-import {Service} from "typedi";
+import {Inject, Service} from "typedi";
 import {SimpleResponse} from "../SimpleResponse";
 import {EntityManager} from "typeorm";
 import {HTMLService} from "../../services/HTMLService";
@@ -11,6 +11,7 @@ import {registerEnumType} from "type-graphql";
 import SessionService from "../../services/SessionService";
 import {createKey} from "../../utils/bag";
 import {Transporter} from "nodemailer";
+import {tokens} from "../../utils/container";
 
 export enum SessionExpiration {
   ONE_HOUR,
@@ -28,7 +29,7 @@ export default class AuthService {
     private manager: EntityManager,
     private htmlService: HTMLService,
     private sessionService: SessionService,
-    private emailer: Transporter
+    @Inject(tokens.Transporter) private emailer: Transporter
   ) {}
 
   async getNewToken(email: string): Promise<SimpleResponse> {

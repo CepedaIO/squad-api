@@ -1,6 +1,6 @@
 import {DateTime} from "luxon";
 import {promote} from "./shared-shim";
-import {IAvailabilityBase, Demote} from "squad-shared"
+import {IAvailabilityBase, Demote} from "squad-shared";
 import {ColumnOptions} from "typeorm/decorator/options/ColumnOptions";
 
 export const DateTimeColumn: ColumnOptions = {
